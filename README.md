@@ -5,6 +5,12 @@
 
 ## Connecting to the drone
 
+The address for our drone is
+
+```bash
+radio://0/80/2M/E7E7E7E718
+```
+
 ### Ubuntu/Linux
 
 The Crazyradio is easily recognized on Linux, but you need to set up udev permissions. See the [USB permission instructions](/docs/installation/usb_permissions.md) to configure udev on Ubuntu/Linux.
@@ -36,3 +42,14 @@ The GUI client can be run using
 ```bash
 uvx cfclient
 ```
+
+## Verifying the connection
+
+A minimal script is provided to check that `cflib` can see and talk to the drone:
+
+```bash
+uv run python test_connection.py
+```
+
+On success it prints the firmware revision and disconnects cleanly. If you see
+`Too many packets lost`, move the drone closer to the Crazyradio and retry.
