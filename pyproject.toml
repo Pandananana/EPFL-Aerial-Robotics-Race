@@ -7,4 +7,5 @@ requires-python = ">=3.13"
 dependencies = [
     "cflib>=0.1.32",
     "opencv-python>=4.13.0.92",
+    "pyqt6>=6.11.0",
 ]
