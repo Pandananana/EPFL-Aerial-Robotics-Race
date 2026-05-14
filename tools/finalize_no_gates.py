@@ -37,24 +37,35 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("images_dir", type=Path, help="Directory with the original PNGs and JSONs")
     parser.add_argument("--to-label", type=Path, default=Path("to_label"), help="Symlink working dir")
+    parser.add_argument(
+        "--all-unlabeled",
+        action="store_true",
+        help="Ignore --to-label and treat every unlabeled PNG in images_dir as reviewed-no-gates.",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    symlinks = sorted(args.to_label.glob("*.png"))
-    if not symlinks:
-        print(f"No PNGs in {args.to_label}/ — nothing to finalize.")
+    if args.all_unlabeled:
+        candidates = sorted(args.images_dir.glob("*.png"))
+        source_desc = f"{args.images_dir}/ (all-unlabeled mode)"
+    else:
+        candidates = sorted(args.to_label.glob("*.png"))
+        source_desc = f"{args.to_label}/"
+
+    if not candidates:
+        print(f"No PNGs in {source_desc} — nothing to finalize.")
         return
 
     written = 0
     skipped = 0
-    for link in symlinks:
-        original = args.images_dir / link.name
+    for png in candidates:
+        original = args.images_dir / png.name
         json_path = original.with_suffix(".json")
         if json_path.exists():
             skipped += 1
             continue
         if args.dry_run:
-            print(f"would write empty JSON for {link.name}")
+            print(f"would write empty JSON for {png.name}")
         else:
             write_empty_json(original, json_path)
         written += 1
