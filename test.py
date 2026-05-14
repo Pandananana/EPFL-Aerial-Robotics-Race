@@ -13,7 +13,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from train import predict_gates
+from models.hough_detector import predict_gates
 
 
 def load_gt_quads(label_path: Path) -> list[np.ndarray]:

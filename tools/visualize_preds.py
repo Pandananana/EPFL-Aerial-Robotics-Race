@@ -7,8 +7,8 @@ from pathlib import Path
 import cv2
 import numpy as np
 
+from models.hough_detector import predict_gates
 from test import load_gt_quads
-from train import predict_gates
 
 
 def draw_quads(img: np.ndarray, quads: list[np.ndarray], color: tuple[int, int, int]) -> None:
