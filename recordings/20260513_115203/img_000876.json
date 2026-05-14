@@ -1,0 +1,36 @@
+{
+  "version": "6.2.0",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "gate",
+      "points": [
+        [
+          80.91191709844558,
+          99.720207253886
+        ],
+        [
+          136.87046632124353,
+          123.29533678756476
+        ],
+        [
+          132.20725388601036,
+          221.74093264248705
+        ],
+        [
+          78.83937823834196,
+          243.24352331606218
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "../../to_label/img_000876.png",
+  "imageData": null,
+  "imageHeight": 244,
+  "imageWidth": 324
+}
