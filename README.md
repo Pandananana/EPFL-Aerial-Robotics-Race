@@ -53,3 +53,14 @@ uv run python test_connection.py
 
 On success it prints the firmware revision and disconnects cleanly. If you see
 `Too many packets lost`, move the drone closer to the Crazyradio and retry.
+
+## Labeling workflow
+
+```bash
+uv run python tools/sample_to_label.py recordings/<run> --n 50
+uvx labelme to_label --output recordings/<run> --labels gate --nodata --autosave
+uv run python tools/finalize_no_gates.py recordings/<run>
+uv run python tools/build_splits.py
+```
+
+`sample_to_label.py` symlinks a random subset of _unlabeled_ PNGs into `to_label/` (gitignored). `--output` makes labelme write the JSONs back next to the originals. After the batch, `finalize_no_gates.py` writes empty-shape JSONs for any sampled image you skipped past. Finally rebuild the manifest.
