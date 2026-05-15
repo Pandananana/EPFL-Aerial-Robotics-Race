@@ -17,6 +17,7 @@ import numpy as np
 MODEL_MODULES = {
     "hough": "models.hough_detector",
     "yolo_obb": "models.yolo_obb",
+    "yolo_seg": "models.yolo_seg",
 }
 
 

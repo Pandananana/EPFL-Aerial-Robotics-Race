@@ -1,8 +1,8 @@
-"""Train yolo26l-obb on the labeled gate dataset.
+"""Train yolo26x-seg on the labeled gate dataset.
 
 Workflow:
     1. Build the shared YOLO dataset on disk from dataset/splits.json.
-    2. Fine-tune yolo26l-obb (downloaded by Ultralytics on first use).
+    2. Fine-tune yolo26x-seg (downloaded by Ultralytics on first use).
     3. Copy the best checkpoint next to detector.py so predict_gates can find it.
 """
 
@@ -21,7 +21,7 @@ BEST_DST = HERE / "best.pt"
 
 def train(
     yaml_path: Path,
-    base_model: str = "yolo26l-obb.pt",
+    base_model: str = "yolo26x-seg.pt",
     epochs: int = 100,
     imgsz: int = 320,
     batch: int = 16,
@@ -49,8 +49,8 @@ def train(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="yolo26l-obb.pt",
-                        help="Base YOLO OBB checkpoint to fine-tune from.")
+    parser.add_argument("--model", default="yolo26x-seg.pt",
+                        help="Base YOLO Seg checkpoint to fine-tune from.")
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--imgsz", type=int, default=320,
                         help="Source frames are 324x244, so 320 avoids upscaling.")

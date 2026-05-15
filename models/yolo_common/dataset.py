@@ -1,4 +1,4 @@
-"""Build a YOLO OBB dataset from dataset/splits.json.
+"""Build a shared YOLO dataset (OBB + Seg) from dataset/splits.json.
 
 Layout produced (under <out>/):
     data.yaml
@@ -11,6 +11,8 @@ The "val" split here is a deterministic slice of the manifest's train items,
 NOT the manifest's test items — the test split must stay held out for test.py.
 
 Label format per line: `0 x1 y1 x2 y2 x3 y3 x4 y4` with normalized coords.
+This is byte-identical for Ultralytics OBB (exactly 4 points) and Seg (polygon
+of any vertex count), so the same on-disk dataset feeds both tasks.
 """
 
 from __future__ import annotations
@@ -22,7 +24,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = REPO_ROOT / "dataset" / "splits.json"
-DEFAULT_OUT = REPO_ROOT / "models" / "yolo_obb" / "data"
+DEFAULT_OUT = REPO_ROOT / "models" / "yolo_common" / "data"
 
 
 def _quad_to_yolo_line(points: list[list[float]], w: int, h: int) -> str:
@@ -54,7 +56,7 @@ def build(
     val_fraction: float = 0.1,
     seed: int = 0,
 ) -> Path:
-    """Build the YOLO OBB dataset; return the path to data.yaml."""
+    """Build the shared YOLO dataset; return the path to data.yaml."""
     manifest = json.loads(manifest_path.read_text())
     train_items = [it for it in manifest["items"] if it["split"] == "train"]
     if not train_items:
@@ -92,7 +94,7 @@ def build(
     yaml_path = out_dir / "data.yaml"
     yaml_path.write_text(yaml_text)
 
-    print(f"Built YOLO OBB dataset at {out_dir}")
+    print(f"Built shared YOLO dataset at {out_dir}")
     print(f"  train: {len(train_items)} images")
     print(f"  val:   {len(val_items)} images")
     return yaml_path
