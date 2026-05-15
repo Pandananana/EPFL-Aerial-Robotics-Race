@@ -6,6 +6,7 @@ reports precision / recall / F1 at a configurable IoU threshold.
 """
 
 import argparse
+import importlib
 import json
 import random
 from pathlib import Path
@@ -13,7 +14,10 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from models.hough_detector import predict_gates
+MODEL_MODULES = {
+    "hough": "models.hough_detector",
+    "yolo_obb": "models.yolo_obb",
+}
 
 
 def load_gt_quads(label_path: Path) -> list[np.ndarray]:
@@ -75,7 +79,7 @@ def match_greedy(
     return tp, fp, fn, matched_ious
 
 
-def evaluate(test_items: list[dict], iou_threshold: float) -> dict:
+def evaluate(test_items: list[dict], iou_threshold: float, predict_fn) -> dict:
     total_tp = 0
     total_fp = 0
     total_fn = 0
@@ -86,7 +90,7 @@ def evaluate(test_items: list[dict], iou_threshold: float) -> dict:
         if image is None:
             raise FileNotFoundError(item["image"])
         gts = load_gt_quads(Path(item["label"]))
-        preds = predict_gates(image)
+        preds = predict_fn(image)
         tp, fp, fn, ious = match_greedy(preds, gts, image.shape[:2], iou_threshold)
         total_tp += tp
         total_fp += fp
@@ -116,10 +120,14 @@ def main():
     parser.add_argument("--manifest", type=Path, default=Path("dataset/splits.json"))
     parser.add_argument("--iou", type=float, default=0.5, help="IoU threshold for a true positive")
     parser.add_argument("--seed", type=int, default=0, help="RNG seed (the random predictor uses random.*)")
+    parser.add_argument("--model", choices=sorted(MODEL_MODULES), default="hough",
+                        help="Which detector's predict_gates to evaluate.")
     args = parser.parse_args()
 
     random.seed(args.seed)
     np.random.seed(args.seed)
+
+    predict_fn = importlib.import_module(MODEL_MODULES[args.model]).predict_gates
 
     manifest = json.loads(args.manifest.read_text())
     test_items = [it for it in manifest["items"] if it["split"] == "test"]
@@ -127,7 +135,7 @@ def main():
         print("No test items in manifest.")
         return
 
-    scores = evaluate(test_items, args.iou)
+    scores = evaluate(test_items, args.iou, predict_fn)
 
     print(f"Test images:        {scores['n_images']}")
     print(f"IoU threshold:      {scores['iou_threshold']}")

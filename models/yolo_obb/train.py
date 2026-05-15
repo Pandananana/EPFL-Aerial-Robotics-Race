@@ -1,0 +1,85 @@
+"""Train yolo26l-obb on the labeled gate dataset.
+
+Workflow:
+    1. Build the YOLO OBB dataset on disk from dataset/splits.json.
+    2. Fine-tune yolo26l-obb (downloaded by Ultralytics on first use).
+    3. Copy the best checkpoint next to detector.py so predict_gates can find it.
+"""
+
+from __future__ import annotations
+
+import argparse
+import shutil
+from pathlib import Path
+
+from . import dataset as ds
+
+HERE = Path(__file__).resolve().parent
+RUNS_DIR = HERE / "runs"
+BEST_DST = HERE / "best.pt"
+
+
+def train(
+    yaml_path: Path,
+    base_model: str = "yolo26l-obb.pt",
+    epochs: int = 100,
+    imgsz: int = 320,
+    batch: int = 16,
+    name: str = "train",
+) -> Path:
+    """Run YOLO training; return the path to the best.pt checkpoint."""
+    from ultralytics import YOLO
+
+    model = YOLO(base_model)
+    result = model.train(
+        data=str(yaml_path),
+        epochs=epochs,
+        imgsz=imgsz,
+        batch=batch,
+        project=str(RUNS_DIR),
+        name=name,
+        exist_ok=True,
+    )
+    save_dir = Path(result.save_dir) if hasattr(result, "save_dir") else RUNS_DIR / name
+    best = save_dir / "weights" / "best.pt"
+    if not best.exists():
+        raise RuntimeError(f"Training finished but best.pt not found at {best}")
+    return best
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", default="yolo26l-obb.pt",
+                        help="Base YOLO OBB checkpoint to fine-tune from.")
+    parser.add_argument("--epochs", type=int, default=100)
+    parser.add_argument("--imgsz", type=int, default=320,
+                        help="Source frames are 324x244, so 320 avoids upscaling.")
+    parser.add_argument("--batch", type=int, default=16)
+    parser.add_argument("--val-fraction", type=float, default=0.1)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--name", default="train")
+    parser.add_argument("--skip-dataset", action="store_true",
+                        help="Reuse existing dataset on disk.")
+    args = parser.parse_args()
+
+    if args.skip_dataset:
+        yaml_path = ds.DEFAULT_OUT / "data.yaml"
+        if not yaml_path.exists():
+            raise FileNotFoundError(f"No prebuilt dataset at {yaml_path}")
+    else:
+        yaml_path = ds.build(val_fraction=args.val_fraction, seed=args.seed)
+
+    best = train(
+        yaml_path,
+        base_model=args.model,
+        epochs=args.epochs,
+        imgsz=args.imgsz,
+        batch=args.batch,
+        name=args.name,
+    )
+    shutil.copyfile(best, BEST_DST)
+    print(f"Copied best checkpoint to {BEST_DST}")
+
+
+if __name__ == "__main__":
+    main()

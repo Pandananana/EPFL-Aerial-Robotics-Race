@@ -12,3 +12,4 @@ wheels/
 .DS_Store
 cache
 to_label
+models/yolo_obb/data
