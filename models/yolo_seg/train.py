@@ -39,6 +39,22 @@ def train(
         project=str(RUNS_DIR),
         name=name,
         exist_ok=True,
+        # Grayscale frames: hue/saturation jitter is wasted; keep value jitter.
+        hsv_h=0.0,
+        hsv_s=0.0,
+        hsv_v=0.4,
+        # Drone rolls/pitches in flight but the camera is never inverted.
+        degrees=15.0,
+        translate=0.1,
+        scale=0.5,
+        shear=0.0,
+        perspective=0.0,
+        flipud=0.0,
+        fliplr=0.5,
+        mosaic=1.0,
+        mixup=0.1,
+        copy_paste=0.0,
+        erasing=0.2,
     )
     save_dir = Path(result.save_dir) if hasattr(result, "save_dir") else RUNS_DIR / name
     best = save_dir / "weights" / "best.pt"
