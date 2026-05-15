@@ -13,3 +13,5 @@ wheels/
 cache
 to_label
 models/yolo_obb/data
+models/yolo_obb/runs
+*.pt

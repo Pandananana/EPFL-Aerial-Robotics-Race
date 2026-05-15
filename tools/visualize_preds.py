@@ -1,14 +1,15 @@
 """Step through the test split, overlaying ground truth (green) and the
 detector's predictions (red). Space = next image, q / Esc = quit."""
 
+import argparse
+import importlib
 import json
 from pathlib import Path
 
 import cv2
 import numpy as np
 
-from models.hough_detector import predict_gates
-from test import load_gt_quads
+from test import MODEL_MODULES, load_gt_quads
 
 
 def draw_quads(img: np.ndarray, quads: list[np.ndarray], color: tuple[int, int, int]) -> None:
@@ -17,6 +18,11 @@ def draw_quads(img: np.ndarray, quads: list[np.ndarray], color: tuple[int, int, 
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model", choices=sorted(MODEL_MODULES), default="hough")
+    args = parser.parse_args()
+    predict_gates = importlib.import_module(MODEL_MODULES[args.model]).predict_gates
+
     manifest = json.loads(Path("dataset/splits.json").read_text())
     items = [it for it in manifest["items"] if it["split"] == "test"]
 
