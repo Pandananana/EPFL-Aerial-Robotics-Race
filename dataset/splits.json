@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-14T12:25:15.722532+00:00",
+  "generated_at": "2026-05-15T14:04:46.691278+00:00",
   "policy": {
     "20260513_112256": "test",
     "20260513_112205": "train",
@@ -7,21 +7,21 @@
   },
   "stats": {
     "images_per_split": {
-      "train": 241,
+      "train": 435,
       "test": 50
     },
     "gates_per_split": {
-      "train": 257,
+      "train": 509,
       "test": 69
     },
     "empty_images_per_split": {
-      "train": 76,
+      "train": 112,
       "test": 12
     },
     "images_per_run": {
       "20260513_112205": 41,
       "20260513_112256": 50,
-      "20260513_115203": 200
+      "20260513_115203": 394
     }
   },
   "items": [
@@ -845,58 +845,22 @@
       "n_gates": 0
     },
     {
-      "id": "20260513_115203_000001",
-      "image": "recordings/20260513_115203/img_000001.png",
-      "label": "recordings/20260513_115203/img_000001.json",
+      "id": "20260513_115203_000018",
+      "image": "recordings/20260513_115203/img_000018.png",
+      "label": "recordings/20260513_115203/img_000018.json",
       "run": "20260513_115203",
-      "frame": 1,
+      "frame": 18,
       "split": "train",
       "n_gates": 0
     },
     {
-      "id": "20260513_115203_000004",
-      "image": "recordings/20260513_115203/img_000004.png",
-      "label": "recordings/20260513_115203/img_000004.json",
+      "id": "20260513_115203_000023",
+      "image": "recordings/20260513_115203/img_000023.png",
+      "label": "recordings/20260513_115203/img_000023.json",
       "run": "20260513_115203",
-      "frame": 4,
+      "frame": 23,
       "split": "train",
-      "n_gates": 0
-    },
-    {
-      "id": "20260513_115203_000005",
-      "image": "recordings/20260513_115203/img_000005.png",
-      "label": "recordings/20260513_115203/img_000005.json",
-      "run": "20260513_115203",
-      "frame": 5,
-      "split": "train",
-      "n_gates": 0
-    },
-    {
-      "id": "20260513_115203_000008",
-      "image": "recordings/20260513_115203/img_000008.png",
-      "label": "recordings/20260513_115203/img_000008.json",
-      "run": "20260513_115203",
-      "frame": 8,
-      "split": "train",
-      "n_gates": 0
-    },
-    {
-      "id": "20260513_115203_000009",
-      "image": "recordings/20260513_115203/img_000009.png",
-      "label": "recordings/20260513_115203/img_000009.json",
-      "run": "20260513_115203",
-      "frame": 9,
-      "split": "train",
-      "n_gates": 0
-    },
-    {
-      "id": "20260513_115203_000011",
-      "image": "recordings/20260513_115203/img_000011.png",
-      "label": "recordings/20260513_115203/img_000011.json",
-      "run": "20260513_115203",
-      "frame": 11,
-      "split": "train",
-      "n_gates": 0
+      "n_gates": 1
     },
     {
       "id": "20260513_115203_000024",
@@ -926,6 +890,24 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000044",
+      "image": "recordings/20260513_115203/img_000044.png",
+      "label": "recordings/20260513_115203/img_000044.json",
+      "run": "20260513_115203",
+      "frame": 44,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000046",
+      "image": "recordings/20260513_115203/img_000046.png",
+      "label": "recordings/20260513_115203/img_000046.json",
+      "run": "20260513_115203",
+      "frame": 46,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000052",
       "image": "recordings/20260513_115203/img_000052.png",
       "label": "recordings/20260513_115203/img_000052.json",
@@ -933,6 +915,24 @@
       "frame": 52,
       "split": "train",
       "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000053",
+      "image": "recordings/20260513_115203/img_000053.png",
+      "label": "recordings/20260513_115203/img_000053.json",
+      "run": "20260513_115203",
+      "frame": 53,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000061",
+      "image": "recordings/20260513_115203/img_000061.png",
+      "label": "recordings/20260513_115203/img_000061.json",
+      "run": "20260513_115203",
+      "frame": 61,
+      "split": "train",
+      "n_gates": 3
     },
     {
       "id": "20260513_115203_000062",
@@ -971,6 +971,33 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000073",
+      "image": "recordings/20260513_115203/img_000073.png",
+      "label": "recordings/20260513_115203/img_000073.json",
+      "run": "20260513_115203",
+      "frame": 73,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000074",
+      "image": "recordings/20260513_115203/img_000074.png",
+      "label": "recordings/20260513_115203/img_000074.json",
+      "run": "20260513_115203",
+      "frame": 74,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000075",
+      "image": "recordings/20260513_115203/img_000075.png",
+      "label": "recordings/20260513_115203/img_000075.json",
+      "run": "20260513_115203",
+      "frame": 75,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000077",
       "image": "recordings/20260513_115203/img_000077.png",
       "label": "recordings/20260513_115203/img_000077.json",
@@ -994,6 +1021,15 @@
       "label": "recordings/20260513_115203/img_000082.json",
       "run": "20260513_115203",
       "frame": 82,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000089",
+      "image": "recordings/20260513_115203/img_000089.png",
+      "label": "recordings/20260513_115203/img_000089.json",
+      "run": "20260513_115203",
+      "frame": 89,
       "split": "train",
       "n_gates": 1
     },
@@ -1034,6 +1070,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000098",
+      "image": "recordings/20260513_115203/img_000098.png",
+      "label": "recordings/20260513_115203/img_000098.json",
+      "run": "20260513_115203",
+      "frame": 98,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000101",
       "image": "recordings/20260513_115203/img_000101.png",
       "label": "recordings/20260513_115203/img_000101.json",
@@ -1043,11 +1088,56 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000105",
+      "image": "recordings/20260513_115203/img_000105.png",
+      "label": "recordings/20260513_115203/img_000105.json",
+      "run": "20260513_115203",
+      "frame": 105,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000111",
+      "image": "recordings/20260513_115203/img_000111.png",
+      "label": "recordings/20260513_115203/img_000111.json",
+      "run": "20260513_115203",
+      "frame": 111,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000113",
       "image": "recordings/20260513_115203/img_000113.png",
       "label": "recordings/20260513_115203/img_000113.json",
       "run": "20260513_115203",
       "frame": 113,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000116",
+      "image": "recordings/20260513_115203/img_000116.png",
+      "label": "recordings/20260513_115203/img_000116.json",
+      "run": "20260513_115203",
+      "frame": 116,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000117",
+      "image": "recordings/20260513_115203/img_000117.png",
+      "label": "recordings/20260513_115203/img_000117.json",
+      "run": "20260513_115203",
+      "frame": 117,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000120",
+      "image": "recordings/20260513_115203/img_000120.png",
+      "label": "recordings/20260513_115203/img_000120.json",
+      "run": "20260513_115203",
+      "frame": 120,
       "split": "train",
       "n_gates": 2
     },
@@ -1088,6 +1178,15 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000138",
+      "image": "recordings/20260513_115203/img_000138.png",
+      "label": "recordings/20260513_115203/img_000138.json",
+      "run": "20260513_115203",
+      "frame": 138,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000140",
       "image": "recordings/20260513_115203/img_000140.png",
       "label": "recordings/20260513_115203/img_000140.json",
@@ -1102,6 +1201,33 @@
       "label": "recordings/20260513_115203/img_000148.json",
       "run": "20260513_115203",
       "frame": 148,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000149",
+      "image": "recordings/20260513_115203/img_000149.png",
+      "label": "recordings/20260513_115203/img_000149.json",
+      "run": "20260513_115203",
+      "frame": 149,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000152",
+      "image": "recordings/20260513_115203/img_000152.png",
+      "label": "recordings/20260513_115203/img_000152.json",
+      "run": "20260513_115203",
+      "frame": 152,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000153",
+      "image": "recordings/20260513_115203/img_000153.png",
+      "label": "recordings/20260513_115203/img_000153.json",
+      "run": "20260513_115203",
+      "frame": 153,
       "split": "train",
       "n_gates": 1
     },
@@ -1124,11 +1250,101 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000162",
+      "image": "recordings/20260513_115203/img_000162.png",
+      "label": "recordings/20260513_115203/img_000162.json",
+      "run": "20260513_115203",
+      "frame": 162,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000163",
+      "image": "recordings/20260513_115203/img_000163.png",
+      "label": "recordings/20260513_115203/img_000163.json",
+      "run": "20260513_115203",
+      "frame": 163,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000170",
+      "image": "recordings/20260513_115203/img_000170.png",
+      "label": "recordings/20260513_115203/img_000170.json",
+      "run": "20260513_115203",
+      "frame": 170,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000177",
+      "image": "recordings/20260513_115203/img_000177.png",
+      "label": "recordings/20260513_115203/img_000177.json",
+      "run": "20260513_115203",
+      "frame": 177,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000178",
+      "image": "recordings/20260513_115203/img_000178.png",
+      "label": "recordings/20260513_115203/img_000178.json",
+      "run": "20260513_115203",
+      "frame": 178,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000180",
+      "image": "recordings/20260513_115203/img_000180.png",
+      "label": "recordings/20260513_115203/img_000180.json",
+      "run": "20260513_115203",
+      "frame": 180,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000183",
+      "image": "recordings/20260513_115203/img_000183.png",
+      "label": "recordings/20260513_115203/img_000183.json",
+      "run": "20260513_115203",
+      "frame": 183,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000185",
+      "image": "recordings/20260513_115203/img_000185.png",
+      "label": "recordings/20260513_115203/img_000185.json",
+      "run": "20260513_115203",
+      "frame": 185,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000188",
       "image": "recordings/20260513_115203/img_000188.png",
       "label": "recordings/20260513_115203/img_000188.json",
       "run": "20260513_115203",
       "frame": 188,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000193",
+      "image": "recordings/20260513_115203/img_000193.png",
+      "label": "recordings/20260513_115203/img_000193.json",
+      "run": "20260513_115203",
+      "frame": 193,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000194",
+      "image": "recordings/20260513_115203/img_000194.png",
+      "label": "recordings/20260513_115203/img_000194.json",
+      "run": "20260513_115203",
+      "frame": 194,
       "split": "train",
       "n_gates": 1
     },
@@ -1142,11 +1358,38 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000200",
+      "image": "recordings/20260513_115203/img_000200.png",
+      "label": "recordings/20260513_115203/img_000200.json",
+      "run": "20260513_115203",
+      "frame": 200,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000201",
+      "image": "recordings/20260513_115203/img_000201.png",
+      "label": "recordings/20260513_115203/img_000201.json",
+      "run": "20260513_115203",
+      "frame": 201,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_000206",
       "image": "recordings/20260513_115203/img_000206.png",
       "label": "recordings/20260513_115203/img_000206.json",
       "run": "20260513_115203",
       "frame": 206,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000209",
+      "image": "recordings/20260513_115203/img_000209.png",
+      "label": "recordings/20260513_115203/img_000209.json",
+      "run": "20260513_115203",
+      "frame": 209,
       "split": "train",
       "n_gates": 0
     },
@@ -1169,6 +1412,33 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000217",
+      "image": "recordings/20260513_115203/img_000217.png",
+      "label": "recordings/20260513_115203/img_000217.json",
+      "run": "20260513_115203",
+      "frame": 217,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000219",
+      "image": "recordings/20260513_115203/img_000219.png",
+      "label": "recordings/20260513_115203/img_000219.json",
+      "run": "20260513_115203",
+      "frame": 219,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000223",
+      "image": "recordings/20260513_115203/img_000223.png",
+      "label": "recordings/20260513_115203/img_000223.json",
+      "run": "20260513_115203",
+      "frame": 223,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000224",
       "image": "recordings/20260513_115203/img_000224.png",
       "label": "recordings/20260513_115203/img_000224.json",
@@ -1187,11 +1457,38 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000227",
+      "image": "recordings/20260513_115203/img_000227.png",
+      "label": "recordings/20260513_115203/img_000227.json",
+      "run": "20260513_115203",
+      "frame": 227,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000237",
       "image": "recordings/20260513_115203/img_000237.png",
       "label": "recordings/20260513_115203/img_000237.json",
       "run": "20260513_115203",
       "frame": 237,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000238",
+      "image": "recordings/20260513_115203/img_000238.png",
+      "label": "recordings/20260513_115203/img_000238.json",
+      "run": "20260513_115203",
+      "frame": 238,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000252",
+      "image": "recordings/20260513_115203/img_000252.png",
+      "label": "recordings/20260513_115203/img_000252.json",
+      "run": "20260513_115203",
+      "frame": 252,
       "split": "train",
       "n_gates": 1
     },
@@ -1219,6 +1516,51 @@
       "label": "recordings/20260513_115203/img_000260.json",
       "run": "20260513_115203",
       "frame": 260,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000263",
+      "image": "recordings/20260513_115203/img_000263.png",
+      "label": "recordings/20260513_115203/img_000263.json",
+      "run": "20260513_115203",
+      "frame": 263,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000266",
+      "image": "recordings/20260513_115203/img_000266.png",
+      "label": "recordings/20260513_115203/img_000266.json",
+      "run": "20260513_115203",
+      "frame": 266,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000269",
+      "image": "recordings/20260513_115203/img_000269.png",
+      "label": "recordings/20260513_115203/img_000269.json",
+      "run": "20260513_115203",
+      "frame": 269,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000279",
+      "image": "recordings/20260513_115203/img_000279.png",
+      "label": "recordings/20260513_115203/img_000279.json",
+      "run": "20260513_115203",
+      "frame": 279,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000287",
+      "image": "recordings/20260513_115203/img_000287.png",
+      "label": "recordings/20260513_115203/img_000287.json",
+      "run": "20260513_115203",
+      "frame": 287,
       "split": "train",
       "n_gates": 2
     },
@@ -1259,11 +1601,65 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000300",
+      "image": "recordings/20260513_115203/img_000300.png",
+      "label": "recordings/20260513_115203/img_000300.json",
+      "run": "20260513_115203",
+      "frame": 300,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000301",
+      "image": "recordings/20260513_115203/img_000301.png",
+      "label": "recordings/20260513_115203/img_000301.json",
+      "run": "20260513_115203",
+      "frame": 301,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000302",
+      "image": "recordings/20260513_115203/img_000302.png",
+      "label": "recordings/20260513_115203/img_000302.json",
+      "run": "20260513_115203",
+      "frame": 302,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000303",
       "image": "recordings/20260513_115203/img_000303.png",
       "label": "recordings/20260513_115203/img_000303.json",
       "run": "20260513_115203",
       "frame": 303,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000305",
+      "image": "recordings/20260513_115203/img_000305.png",
+      "label": "recordings/20260513_115203/img_000305.json",
+      "run": "20260513_115203",
+      "frame": 305,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000306",
+      "image": "recordings/20260513_115203/img_000306.png",
+      "label": "recordings/20260513_115203/img_000306.json",
+      "run": "20260513_115203",
+      "frame": 306,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000307",
+      "image": "recordings/20260513_115203/img_000307.png",
+      "label": "recordings/20260513_115203/img_000307.json",
+      "run": "20260513_115203",
+      "frame": 307,
       "split": "train",
       "n_gates": 2
     },
@@ -1277,6 +1673,24 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000309",
+      "image": "recordings/20260513_115203/img_000309.png",
+      "label": "recordings/20260513_115203/img_000309.json",
+      "run": "20260513_115203",
+      "frame": 309,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000310",
+      "image": "recordings/20260513_115203/img_000310.png",
+      "label": "recordings/20260513_115203/img_000310.json",
+      "run": "20260513_115203",
+      "frame": 310,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000317",
       "image": "recordings/20260513_115203/img_000317.png",
       "label": "recordings/20260513_115203/img_000317.json",
@@ -1284,6 +1698,42 @@
       "frame": 317,
       "split": "train",
       "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000318",
+      "image": "recordings/20260513_115203/img_000318.png",
+      "label": "recordings/20260513_115203/img_000318.json",
+      "run": "20260513_115203",
+      "frame": 318,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000321",
+      "image": "recordings/20260513_115203/img_000321.png",
+      "label": "recordings/20260513_115203/img_000321.json",
+      "run": "20260513_115203",
+      "frame": 321,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000324",
+      "image": "recordings/20260513_115203/img_000324.png",
+      "label": "recordings/20260513_115203/img_000324.json",
+      "run": "20260513_115203",
+      "frame": 324,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000327",
+      "image": "recordings/20260513_115203/img_000327.png",
+      "label": "recordings/20260513_115203/img_000327.json",
+      "run": "20260513_115203",
+      "frame": 327,
+      "split": "train",
+      "n_gates": 1
     },
     {
       "id": "20260513_115203_000333",
@@ -1331,6 +1781,15 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000346",
+      "image": "recordings/20260513_115203/img_000346.png",
+      "label": "recordings/20260513_115203/img_000346.json",
+      "run": "20260513_115203",
+      "frame": 346,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000350",
       "image": "recordings/20260513_115203/img_000350.png",
       "label": "recordings/20260513_115203/img_000350.json",
@@ -1347,6 +1806,15 @@
       "frame": 358,
       "split": "train",
       "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000371",
+      "image": "recordings/20260513_115203/img_000371.png",
+      "label": "recordings/20260513_115203/img_000371.json",
+      "run": "20260513_115203",
+      "frame": 371,
+      "split": "train",
+      "n_gates": 2
     },
     {
       "id": "20260513_115203_000372",
@@ -1412,6 +1880,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000388",
+      "image": "recordings/20260513_115203/img_000388.png",
+      "label": "recordings/20260513_115203/img_000388.json",
+      "run": "20260513_115203",
+      "frame": 388,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000391",
       "image": "recordings/20260513_115203/img_000391.png",
       "label": "recordings/20260513_115203/img_000391.json",
@@ -1435,6 +1912,15 @@
       "label": "recordings/20260513_115203/img_000397.json",
       "run": "20260513_115203",
       "frame": 397,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000416",
+      "image": "recordings/20260513_115203/img_000416.png",
+      "label": "recordings/20260513_115203/img_000416.json",
+      "run": "20260513_115203",
+      "frame": 416,
       "split": "train",
       "n_gates": 2
     },
@@ -1493,11 +1979,92 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000448",
+      "image": "recordings/20260513_115203/img_000448.png",
+      "label": "recordings/20260513_115203/img_000448.json",
+      "run": "20260513_115203",
+      "frame": 448,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000449",
+      "image": "recordings/20260513_115203/img_000449.png",
+      "label": "recordings/20260513_115203/img_000449.json",
+      "run": "20260513_115203",
+      "frame": 449,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_000453",
       "image": "recordings/20260513_115203/img_000453.png",
       "label": "recordings/20260513_115203/img_000453.json",
       "run": "20260513_115203",
       "frame": 453,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000459",
+      "image": "recordings/20260513_115203/img_000459.png",
+      "label": "recordings/20260513_115203/img_000459.json",
+      "run": "20260513_115203",
+      "frame": 459,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000460",
+      "image": "recordings/20260513_115203/img_000460.png",
+      "label": "recordings/20260513_115203/img_000460.json",
+      "run": "20260513_115203",
+      "frame": 460,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000461",
+      "image": "recordings/20260513_115203/img_000461.png",
+      "label": "recordings/20260513_115203/img_000461.json",
+      "run": "20260513_115203",
+      "frame": 461,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000464",
+      "image": "recordings/20260513_115203/img_000464.png",
+      "label": "recordings/20260513_115203/img_000464.json",
+      "run": "20260513_115203",
+      "frame": 464,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000466",
+      "image": "recordings/20260513_115203/img_000466.png",
+      "label": "recordings/20260513_115203/img_000466.json",
+      "run": "20260513_115203",
+      "frame": 466,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000467",
+      "image": "recordings/20260513_115203/img_000467.png",
+      "label": "recordings/20260513_115203/img_000467.json",
+      "run": "20260513_115203",
+      "frame": 467,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000472",
+      "image": "recordings/20260513_115203/img_000472.png",
+      "label": "recordings/20260513_115203/img_000472.json",
+      "run": "20260513_115203",
+      "frame": 472,
       "split": "train",
       "n_gates": 0
     },
@@ -1511,6 +2078,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000476",
+      "image": "recordings/20260513_115203/img_000476.png",
+      "label": "recordings/20260513_115203/img_000476.json",
+      "run": "20260513_115203",
+      "frame": 476,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000477",
       "image": "recordings/20260513_115203/img_000477.png",
       "label": "recordings/20260513_115203/img_000477.json",
@@ -1518,6 +2094,15 @@
       "frame": 477,
       "split": "train",
       "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000481",
+      "image": "recordings/20260513_115203/img_000481.png",
+      "label": "recordings/20260513_115203/img_000481.json",
+      "run": "20260513_115203",
+      "frame": 481,
+      "split": "train",
+      "n_gates": 1
     },
     {
       "id": "20260513_115203_000482",
@@ -1538,11 +2123,38 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000484",
+      "image": "recordings/20260513_115203/img_000484.png",
+      "label": "recordings/20260513_115203/img_000484.json",
+      "run": "20260513_115203",
+      "frame": 484,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000486",
       "image": "recordings/20260513_115203/img_000486.png",
       "label": "recordings/20260513_115203/img_000486.json",
       "run": "20260513_115203",
       "frame": 486,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000492",
+      "image": "recordings/20260513_115203/img_000492.png",
+      "label": "recordings/20260513_115203/img_000492.json",
+      "run": "20260513_115203",
+      "frame": 492,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000493",
+      "image": "recordings/20260513_115203/img_000493.png",
+      "label": "recordings/20260513_115203/img_000493.json",
+      "run": "20260513_115203",
+      "frame": 493,
       "split": "train",
       "n_gates": 1
     },
@@ -1554,6 +2166,33 @@
       "frame": 500,
       "split": "train",
       "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000501",
+      "image": "recordings/20260513_115203/img_000501.png",
+      "label": "recordings/20260513_115203/img_000501.json",
+      "run": "20260513_115203",
+      "frame": 501,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000502",
+      "image": "recordings/20260513_115203/img_000502.png",
+      "label": "recordings/20260513_115203/img_000502.json",
+      "run": "20260513_115203",
+      "frame": 502,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000503",
+      "image": "recordings/20260513_115203/img_000503.png",
+      "label": "recordings/20260513_115203/img_000503.json",
+      "run": "20260513_115203",
+      "frame": 503,
+      "split": "train",
+      "n_gates": 1
     },
     {
       "id": "20260513_115203_000509",
@@ -1583,6 +2222,24 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000517",
+      "image": "recordings/20260513_115203/img_000517.png",
+      "label": "recordings/20260513_115203/img_000517.json",
+      "run": "20260513_115203",
+      "frame": 517,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000526",
+      "image": "recordings/20260513_115203/img_000526.png",
+      "label": "recordings/20260513_115203/img_000526.json",
+      "run": "20260513_115203",
+      "frame": 526,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000531",
       "image": "recordings/20260513_115203/img_000531.png",
       "label": "recordings/20260513_115203/img_000531.json",
@@ -1590,6 +2247,15 @@
       "frame": 531,
       "split": "train",
       "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000534",
+      "image": "recordings/20260513_115203/img_000534.png",
+      "label": "recordings/20260513_115203/img_000534.json",
+      "run": "20260513_115203",
+      "frame": 534,
+      "split": "train",
+      "n_gates": 2
     },
     {
       "id": "20260513_115203_000539",
@@ -1610,11 +2276,56 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000541",
+      "image": "recordings/20260513_115203/img_000541.png",
+      "label": "recordings/20260513_115203/img_000541.json",
+      "run": "20260513_115203",
+      "frame": 541,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000544",
+      "image": "recordings/20260513_115203/img_000544.png",
+      "label": "recordings/20260513_115203/img_000544.json",
+      "run": "20260513_115203",
+      "frame": 544,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000545",
       "image": "recordings/20260513_115203/img_000545.png",
       "label": "recordings/20260513_115203/img_000545.json",
       "run": "20260513_115203",
       "frame": 545,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000559",
+      "image": "recordings/20260513_115203/img_000559.png",
+      "label": "recordings/20260513_115203/img_000559.json",
+      "run": "20260513_115203",
+      "frame": 559,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000560",
+      "image": "recordings/20260513_115203/img_000560.png",
+      "label": "recordings/20260513_115203/img_000560.json",
+      "run": "20260513_115203",
+      "frame": 560,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000563",
+      "image": "recordings/20260513_115203/img_000563.png",
+      "label": "recordings/20260513_115203/img_000563.json",
+      "run": "20260513_115203",
+      "frame": 563,
       "split": "train",
       "n_gates": 2
     },
@@ -1635,6 +2346,15 @@
       "frame": 568,
       "split": "train",
       "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000573",
+      "image": "recordings/20260513_115203/img_000573.png",
+      "label": "recordings/20260513_115203/img_000573.json",
+      "run": "20260513_115203",
+      "frame": 573,
+      "split": "train",
+      "n_gates": 3
     },
     {
       "id": "20260513_115203_000574",
@@ -1673,11 +2393,83 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000588",
+      "image": "recordings/20260513_115203/img_000588.png",
+      "label": "recordings/20260513_115203/img_000588.json",
+      "run": "20260513_115203",
+      "frame": 588,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000593",
       "image": "recordings/20260513_115203/img_000593.png",
       "label": "recordings/20260513_115203/img_000593.json",
       "run": "20260513_115203",
       "frame": 593,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000596",
+      "image": "recordings/20260513_115203/img_000596.png",
+      "label": "recordings/20260513_115203/img_000596.json",
+      "run": "20260513_115203",
+      "frame": 596,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000600",
+      "image": "recordings/20260513_115203/img_000600.png",
+      "label": "recordings/20260513_115203/img_000600.json",
+      "run": "20260513_115203",
+      "frame": 600,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000601",
+      "image": "recordings/20260513_115203/img_000601.png",
+      "label": "recordings/20260513_115203/img_000601.json",
+      "run": "20260513_115203",
+      "frame": 601,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000611",
+      "image": "recordings/20260513_115203/img_000611.png",
+      "label": "recordings/20260513_115203/img_000611.json",
+      "run": "20260513_115203",
+      "frame": 611,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000612",
+      "image": "recordings/20260513_115203/img_000612.png",
+      "label": "recordings/20260513_115203/img_000612.json",
+      "run": "20260513_115203",
+      "frame": 612,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000614",
+      "image": "recordings/20260513_115203/img_000614.png",
+      "label": "recordings/20260513_115203/img_000614.json",
+      "run": "20260513_115203",
+      "frame": 614,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000622",
+      "image": "recordings/20260513_115203/img_000622.png",
+      "label": "recordings/20260513_115203/img_000622.json",
+      "run": "20260513_115203",
+      "frame": 622,
       "split": "train",
       "n_gates": 0
     },
@@ -1700,6 +2492,42 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000629",
+      "image": "recordings/20260513_115203/img_000629.png",
+      "label": "recordings/20260513_115203/img_000629.json",
+      "run": "20260513_115203",
+      "frame": 629,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000634",
+      "image": "recordings/20260513_115203/img_000634.png",
+      "label": "recordings/20260513_115203/img_000634.json",
+      "run": "20260513_115203",
+      "frame": 634,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000638",
+      "image": "recordings/20260513_115203/img_000638.png",
+      "label": "recordings/20260513_115203/img_000638.json",
+      "run": "20260513_115203",
+      "frame": 638,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000639",
+      "image": "recordings/20260513_115203/img_000639.png",
+      "label": "recordings/20260513_115203/img_000639.json",
+      "run": "20260513_115203",
+      "frame": 639,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_000640",
       "image": "recordings/20260513_115203/img_000640.png",
       "label": "recordings/20260513_115203/img_000640.json",
@@ -1709,11 +2537,47 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000642",
+      "image": "recordings/20260513_115203/img_000642.png",
+      "label": "recordings/20260513_115203/img_000642.json",
+      "run": "20260513_115203",
+      "frame": 642,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000654",
       "image": "recordings/20260513_115203/img_000654.png",
       "label": "recordings/20260513_115203/img_000654.json",
       "run": "20260513_115203",
       "frame": 654,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000660",
+      "image": "recordings/20260513_115203/img_000660.png",
+      "label": "recordings/20260513_115203/img_000660.json",
+      "run": "20260513_115203",
+      "frame": 660,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000663",
+      "image": "recordings/20260513_115203/img_000663.png",
+      "label": "recordings/20260513_115203/img_000663.json",
+      "run": "20260513_115203",
+      "frame": 663,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000668",
+      "image": "recordings/20260513_115203/img_000668.png",
+      "label": "recordings/20260513_115203/img_000668.json",
+      "run": "20260513_115203",
+      "frame": 668,
       "split": "train",
       "n_gates": 1
     },
@@ -1727,11 +2591,56 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000678",
+      "image": "recordings/20260513_115203/img_000678.png",
+      "label": "recordings/20260513_115203/img_000678.json",
+      "run": "20260513_115203",
+      "frame": 678,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000684",
       "image": "recordings/20260513_115203/img_000684.png",
       "label": "recordings/20260513_115203/img_000684.json",
       "run": "20260513_115203",
       "frame": 684,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000690",
+      "image": "recordings/20260513_115203/img_000690.png",
+      "label": "recordings/20260513_115203/img_000690.json",
+      "run": "20260513_115203",
+      "frame": 690,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000696",
+      "image": "recordings/20260513_115203/img_000696.png",
+      "label": "recordings/20260513_115203/img_000696.json",
+      "run": "20260513_115203",
+      "frame": 696,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000697",
+      "image": "recordings/20260513_115203/img_000697.png",
+      "label": "recordings/20260513_115203/img_000697.json",
+      "run": "20260513_115203",
+      "frame": 697,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000698",
+      "image": "recordings/20260513_115203/img_000698.png",
+      "label": "recordings/20260513_115203/img_000698.json",
+      "run": "20260513_115203",
+      "frame": 698,
       "split": "train",
       "n_gates": 1
     },
@@ -1745,6 +2654,15 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000700",
+      "image": "recordings/20260513_115203/img_000700.png",
+      "label": "recordings/20260513_115203/img_000700.json",
+      "run": "20260513_115203",
+      "frame": 700,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000701",
       "image": "recordings/20260513_115203/img_000701.png",
       "label": "recordings/20260513_115203/img_000701.json",
@@ -1752,6 +2670,15 @@
       "frame": 701,
       "split": "train",
       "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000703",
+      "image": "recordings/20260513_115203/img_000703.png",
+      "label": "recordings/20260513_115203/img_000703.json",
+      "run": "20260513_115203",
+      "frame": 703,
+      "split": "train",
+      "n_gates": 1
     },
     {
       "id": "20260513_115203_000704",
@@ -1772,11 +2699,47 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000712",
+      "image": "recordings/20260513_115203/img_000712.png",
+      "label": "recordings/20260513_115203/img_000712.json",
+      "run": "20260513_115203",
+      "frame": 712,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_000718",
       "image": "recordings/20260513_115203/img_000718.png",
       "label": "recordings/20260513_115203/img_000718.json",
       "run": "20260513_115203",
       "frame": 718,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000726",
+      "image": "recordings/20260513_115203/img_000726.png",
+      "label": "recordings/20260513_115203/img_000726.json",
+      "run": "20260513_115203",
+      "frame": 726,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000730",
+      "image": "recordings/20260513_115203/img_000730.png",
+      "label": "recordings/20260513_115203/img_000730.json",
+      "run": "20260513_115203",
+      "frame": 730,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_000731",
+      "image": "recordings/20260513_115203/img_000731.png",
+      "label": "recordings/20260513_115203/img_000731.json",
+      "run": "20260513_115203",
+      "frame": 731,
       "split": "train",
       "n_gates": 0
     },
@@ -1808,11 +2771,47 @@
       "n_gates": 3
     },
     {
+      "id": "20260513_115203_000748",
+      "image": "recordings/20260513_115203/img_000748.png",
+      "label": "recordings/20260513_115203/img_000748.json",
+      "run": "20260513_115203",
+      "frame": 748,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000750",
+      "image": "recordings/20260513_115203/img_000750.png",
+      "label": "recordings/20260513_115203/img_000750.json",
+      "run": "20260513_115203",
+      "frame": 750,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000762",
       "image": "recordings/20260513_115203/img_000762.png",
       "label": "recordings/20260513_115203/img_000762.json",
       "run": "20260513_115203",
       "frame": 762,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000770",
+      "image": "recordings/20260513_115203/img_000770.png",
+      "label": "recordings/20260513_115203/img_000770.json",
+      "run": "20260513_115203",
+      "frame": 770,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000771",
+      "image": "recordings/20260513_115203/img_000771.png",
+      "label": "recordings/20260513_115203/img_000771.json",
+      "run": "20260513_115203",
+      "frame": 771,
       "split": "train",
       "n_gates": 2
     },
@@ -1835,11 +2834,47 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000778",
+      "image": "recordings/20260513_115203/img_000778.png",
+      "label": "recordings/20260513_115203/img_000778.json",
+      "run": "20260513_115203",
+      "frame": 778,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000779",
+      "image": "recordings/20260513_115203/img_000779.png",
+      "label": "recordings/20260513_115203/img_000779.json",
+      "run": "20260513_115203",
+      "frame": 779,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000780",
       "image": "recordings/20260513_115203/img_000780.png",
       "label": "recordings/20260513_115203/img_000780.json",
       "run": "20260513_115203",
       "frame": 780,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000784",
+      "image": "recordings/20260513_115203/img_000784.png",
+      "label": "recordings/20260513_115203/img_000784.json",
+      "run": "20260513_115203",
+      "frame": 784,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000786",
+      "image": "recordings/20260513_115203/img_000786.png",
+      "label": "recordings/20260513_115203/img_000786.json",
+      "run": "20260513_115203",
+      "frame": 786,
       "split": "train",
       "n_gates": 2
     },
@@ -1851,6 +2886,24 @@
       "frame": 788,
       "split": "train",
       "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000790",
+      "image": "recordings/20260513_115203/img_000790.png",
+      "label": "recordings/20260513_115203/img_000790.json",
+      "run": "20260513_115203",
+      "frame": 790,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_000792",
+      "image": "recordings/20260513_115203/img_000792.png",
+      "label": "recordings/20260513_115203/img_000792.json",
+      "run": "20260513_115203",
+      "frame": 792,
+      "split": "train",
+      "n_gates": 2
     },
     {
       "id": "20260513_115203_000795",
@@ -1871,6 +2924,24 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000801",
+      "image": "recordings/20260513_115203/img_000801.png",
+      "label": "recordings/20260513_115203/img_000801.json",
+      "run": "20260513_115203",
+      "frame": 801,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000802",
+      "image": "recordings/20260513_115203/img_000802.png",
+      "label": "recordings/20260513_115203/img_000802.json",
+      "run": "20260513_115203",
+      "frame": 802,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000803",
       "image": "recordings/20260513_115203/img_000803.png",
       "label": "recordings/20260513_115203/img_000803.json",
@@ -1880,11 +2951,38 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000804",
+      "image": "recordings/20260513_115203/img_000804.png",
+      "label": "recordings/20260513_115203/img_000804.json",
+      "run": "20260513_115203",
+      "frame": 804,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000805",
+      "image": "recordings/20260513_115203/img_000805.png",
+      "label": "recordings/20260513_115203/img_000805.json",
+      "run": "20260513_115203",
+      "frame": 805,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000806",
       "image": "recordings/20260513_115203/img_000806.png",
       "label": "recordings/20260513_115203/img_000806.json",
       "run": "20260513_115203",
       "frame": 806,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000807",
+      "image": "recordings/20260513_115203/img_000807.png",
+      "label": "recordings/20260513_115203/img_000807.json",
+      "run": "20260513_115203",
+      "frame": 807,
       "split": "train",
       "n_gates": 2
     },
@@ -1912,6 +3010,15 @@
       "label": "recordings/20260513_115203/img_000818.json",
       "run": "20260513_115203",
       "frame": 818,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000820",
+      "image": "recordings/20260513_115203/img_000820.png",
+      "label": "recordings/20260513_115203/img_000820.json",
+      "run": "20260513_115203",
+      "frame": 820,
       "split": "train",
       "n_gates": 2
     },
@@ -1961,11 +3068,65 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_000835",
+      "image": "recordings/20260513_115203/img_000835.png",
+      "label": "recordings/20260513_115203/img_000835.json",
+      "run": "20260513_115203",
+      "frame": 835,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000836",
+      "image": "recordings/20260513_115203/img_000836.png",
+      "label": "recordings/20260513_115203/img_000836.json",
+      "run": "20260513_115203",
+      "frame": 836,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000841",
       "image": "recordings/20260513_115203/img_000841.png",
       "label": "recordings/20260513_115203/img_000841.json",
       "run": "20260513_115203",
       "frame": 841,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000842",
+      "image": "recordings/20260513_115203/img_000842.png",
+      "label": "recordings/20260513_115203/img_000842.json",
+      "run": "20260513_115203",
+      "frame": 842,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000847",
+      "image": "recordings/20260513_115203/img_000847.png",
+      "label": "recordings/20260513_115203/img_000847.json",
+      "run": "20260513_115203",
+      "frame": 847,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000848",
+      "image": "recordings/20260513_115203/img_000848.png",
+      "label": "recordings/20260513_115203/img_000848.json",
+      "run": "20260513_115203",
+      "frame": 848,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000851",
+      "image": "recordings/20260513_115203/img_000851.png",
+      "label": "recordings/20260513_115203/img_000851.json",
+      "run": "20260513_115203",
+      "frame": 851,
       "split": "train",
       "n_gates": 1
     },
@@ -1988,6 +3149,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000860",
+      "image": "recordings/20260513_115203/img_000860.png",
+      "label": "recordings/20260513_115203/img_000860.json",
+      "run": "20260513_115203",
+      "frame": 860,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000863",
       "image": "recordings/20260513_115203/img_000863.png",
       "label": "recordings/20260513_115203/img_000863.json",
@@ -2004,6 +3174,15 @@
       "frame": 868,
       "split": "train",
       "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000869",
+      "image": "recordings/20260513_115203/img_000869.png",
+      "label": "recordings/20260513_115203/img_000869.json",
+      "run": "20260513_115203",
+      "frame": 869,
+      "split": "train",
+      "n_gates": 0
     },
     {
       "id": "20260513_115203_000874",
@@ -2042,6 +3221,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000880",
+      "image": "recordings/20260513_115203/img_000880.png",
+      "label": "recordings/20260513_115203/img_000880.json",
+      "run": "20260513_115203",
+      "frame": 880,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000888",
       "image": "recordings/20260513_115203/img_000888.png",
       "label": "recordings/20260513_115203/img_000888.json",
@@ -2069,6 +3257,24 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000895",
+      "image": "recordings/20260513_115203/img_000895.png",
+      "label": "recordings/20260513_115203/img_000895.json",
+      "run": "20260513_115203",
+      "frame": 895,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000897",
+      "image": "recordings/20260513_115203/img_000897.png",
+      "label": "recordings/20260513_115203/img_000897.json",
+      "run": "20260513_115203",
+      "frame": 897,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000904",
       "image": "recordings/20260513_115203/img_000904.png",
       "label": "recordings/20260513_115203/img_000904.json",
@@ -2087,6 +3293,24 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000910",
+      "image": "recordings/20260513_115203/img_000910.png",
+      "label": "recordings/20260513_115203/img_000910.json",
+      "run": "20260513_115203",
+      "frame": 910,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000917",
+      "image": "recordings/20260513_115203/img_000917.png",
+      "label": "recordings/20260513_115203/img_000917.json",
+      "run": "20260513_115203",
+      "frame": 917,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000918",
       "image": "recordings/20260513_115203/img_000918.png",
       "label": "recordings/20260513_115203/img_000918.json",
@@ -2101,6 +3325,24 @@
       "label": "recordings/20260513_115203/img_000923.json",
       "run": "20260513_115203",
       "frame": 923,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000924",
+      "image": "recordings/20260513_115203/img_000924.png",
+      "label": "recordings/20260513_115203/img_000924.json",
+      "run": "20260513_115203",
+      "frame": 924,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000925",
+      "image": "recordings/20260513_115203/img_000925.png",
+      "label": "recordings/20260513_115203/img_000925.json",
+      "run": "20260513_115203",
+      "frame": 925,
       "split": "train",
       "n_gates": 1
     },
@@ -2132,6 +3374,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000943",
+      "image": "recordings/20260513_115203/img_000943.png",
+      "label": "recordings/20260513_115203/img_000943.json",
+      "run": "20260513_115203",
+      "frame": 943,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_000948",
       "image": "recordings/20260513_115203/img_000948.png",
       "label": "recordings/20260513_115203/img_000948.json",
@@ -2159,6 +3410,15 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_000957",
+      "image": "recordings/20260513_115203/img_000957.png",
+      "label": "recordings/20260513_115203/img_000957.json",
+      "run": "20260513_115203",
+      "frame": 957,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000960",
       "image": "recordings/20260513_115203/img_000960.png",
       "label": "recordings/20260513_115203/img_000960.json",
@@ -2177,6 +3437,15 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000967",
+      "image": "recordings/20260513_115203/img_000967.png",
+      "label": "recordings/20260513_115203/img_000967.json",
+      "run": "20260513_115203",
+      "frame": 967,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000968",
       "image": "recordings/20260513_115203/img_000968.png",
       "label": "recordings/20260513_115203/img_000968.json",
@@ -2186,11 +3455,56 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_000972",
+      "image": "recordings/20260513_115203/img_000972.png",
+      "label": "recordings/20260513_115203/img_000972.json",
+      "run": "20260513_115203",
+      "frame": 972,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_000974",
+      "image": "recordings/20260513_115203/img_000974.png",
+      "label": "recordings/20260513_115203/img_000974.json",
+      "run": "20260513_115203",
+      "frame": 974,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000975",
+      "image": "recordings/20260513_115203/img_000975.png",
+      "label": "recordings/20260513_115203/img_000975.json",
+      "run": "20260513_115203",
+      "frame": 975,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_000978",
       "image": "recordings/20260513_115203/img_000978.png",
       "label": "recordings/20260513_115203/img_000978.json",
       "run": "20260513_115203",
       "frame": 978,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000981",
+      "image": "recordings/20260513_115203/img_000981.png",
+      "label": "recordings/20260513_115203/img_000981.json",
+      "run": "20260513_115203",
+      "frame": 981,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000982",
+      "image": "recordings/20260513_115203/img_000982.png",
+      "label": "recordings/20260513_115203/img_000982.json",
+      "run": "20260513_115203",
+      "frame": 982,
       "split": "train",
       "n_gates": 1
     },
@@ -2211,6 +3525,51 @@
       "frame": 988,
       "split": "train",
       "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_000999",
+      "image": "recordings/20260513_115203/img_000999.png",
+      "label": "recordings/20260513_115203/img_000999.json",
+      "run": "20260513_115203",
+      "frame": 999,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001001",
+      "image": "recordings/20260513_115203/img_001001.png",
+      "label": "recordings/20260513_115203/img_001001.json",
+      "run": "20260513_115203",
+      "frame": 1001,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001006",
+      "image": "recordings/20260513_115203/img_001006.png",
+      "label": "recordings/20260513_115203/img_001006.json",
+      "run": "20260513_115203",
+      "frame": 1006,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001013",
+      "image": "recordings/20260513_115203/img_001013.png",
+      "label": "recordings/20260513_115203/img_001013.json",
+      "run": "20260513_115203",
+      "frame": 1013,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001015",
+      "image": "recordings/20260513_115203/img_001015.png",
+      "label": "recordings/20260513_115203/img_001015.json",
+      "run": "20260513_115203",
+      "frame": 1015,
+      "split": "train",
+      "n_gates": 2
     },
     {
       "id": "20260513_115203_001017",
@@ -2249,11 +3608,38 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_001025",
+      "image": "recordings/20260513_115203/img_001025.png",
+      "label": "recordings/20260513_115203/img_001025.json",
+      "run": "20260513_115203",
+      "frame": 1025,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001033",
+      "image": "recordings/20260513_115203/img_001033.png",
+      "label": "recordings/20260513_115203/img_001033.json",
+      "run": "20260513_115203",
+      "frame": 1033,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_001036",
       "image": "recordings/20260513_115203/img_001036.png",
       "label": "recordings/20260513_115203/img_001036.json",
       "run": "20260513_115203",
       "frame": 1036,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001039",
+      "image": "recordings/20260513_115203/img_001039.png",
+      "label": "recordings/20260513_115203/img_001039.json",
+      "run": "20260513_115203",
+      "frame": 1039,
       "split": "train",
       "n_gates": 2
     },
@@ -2281,6 +3667,15 @@
       "label": "recordings/20260513_115203/img_001045.json",
       "run": "20260513_115203",
       "frame": 1045,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001050",
+      "image": "recordings/20260513_115203/img_001050.png",
+      "label": "recordings/20260513_115203/img_001050.json",
+      "run": "20260513_115203",
+      "frame": 1050,
       "split": "train",
       "n_gates": 2
     },
@@ -2348,6 +3743,24 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_001068",
+      "image": "recordings/20260513_115203/img_001068.png",
+      "label": "recordings/20260513_115203/img_001068.json",
+      "run": "20260513_115203",
+      "frame": 1068,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_001069",
+      "image": "recordings/20260513_115203/img_001069.png",
+      "label": "recordings/20260513_115203/img_001069.json",
+      "run": "20260513_115203",
+      "frame": 1069,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_001073",
       "image": "recordings/20260513_115203/img_001073.png",
       "label": "recordings/20260513_115203/img_001073.json",
@@ -2375,6 +3788,33 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_001083",
+      "image": "recordings/20260513_115203/img_001083.png",
+      "label": "recordings/20260513_115203/img_001083.json",
+      "run": "20260513_115203",
+      "frame": 1083,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_001084",
+      "image": "recordings/20260513_115203/img_001084.png",
+      "label": "recordings/20260513_115203/img_001084.json",
+      "run": "20260513_115203",
+      "frame": 1084,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_001088",
+      "image": "recordings/20260513_115203/img_001088.png",
+      "label": "recordings/20260513_115203/img_001088.json",
+      "run": "20260513_115203",
+      "frame": 1088,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_001095",
       "image": "recordings/20260513_115203/img_001095.png",
       "label": "recordings/20260513_115203/img_001095.json",
@@ -2384,11 +3824,38 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_001099",
+      "image": "recordings/20260513_115203/img_001099.png",
+      "label": "recordings/20260513_115203/img_001099.json",
+      "run": "20260513_115203",
+      "frame": 1099,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_001101",
       "image": "recordings/20260513_115203/img_001101.png",
       "label": "recordings/20260513_115203/img_001101.json",
       "run": "20260513_115203",
       "frame": 1101,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001102",
+      "image": "recordings/20260513_115203/img_001102.png",
+      "label": "recordings/20260513_115203/img_001102.json",
+      "run": "20260513_115203",
+      "frame": 1102,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001104",
+      "image": "recordings/20260513_115203/img_001104.png",
+      "label": "recordings/20260513_115203/img_001104.json",
+      "run": "20260513_115203",
+      "frame": 1104,
       "split": "train",
       "n_gates": 2
     },
@@ -2411,6 +3878,33 @@
       "n_gates": 1
     },
     {
+      "id": "20260513_115203_001110",
+      "image": "recordings/20260513_115203/img_001110.png",
+      "label": "recordings/20260513_115203/img_001110.json",
+      "run": "20260513_115203",
+      "frame": 1110,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001113",
+      "image": "recordings/20260513_115203/img_001113.png",
+      "label": "recordings/20260513_115203/img_001113.json",
+      "run": "20260513_115203",
+      "frame": 1113,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_001114",
+      "image": "recordings/20260513_115203/img_001114.png",
+      "label": "recordings/20260513_115203/img_001114.json",
+      "run": "20260513_115203",
+      "frame": 1114,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
       "id": "20260513_115203_001115",
       "image": "recordings/20260513_115203/img_001115.png",
       "label": "recordings/20260513_115203/img_001115.json",
@@ -2420,11 +3914,47 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_001117",
+      "image": "recordings/20260513_115203/img_001117.png",
+      "label": "recordings/20260513_115203/img_001117.json",
+      "run": "20260513_115203",
+      "frame": 1117,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001126",
+      "image": "recordings/20260513_115203/img_001126.png",
+      "label": "recordings/20260513_115203/img_001126.json",
+      "run": "20260513_115203",
+      "frame": 1126,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_001127",
       "image": "recordings/20260513_115203/img_001127.png",
       "label": "recordings/20260513_115203/img_001127.json",
       "run": "20260513_115203",
       "frame": 1127,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001128",
+      "image": "recordings/20260513_115203/img_001128.png",
+      "label": "recordings/20260513_115203/img_001128.json",
+      "run": "20260513_115203",
+      "frame": 1128,
+      "split": "train",
+      "n_gates": 1
+    },
+    {
+      "id": "20260513_115203_001136",
+      "image": "recordings/20260513_115203/img_001136.png",
+      "label": "recordings/20260513_115203/img_001136.json",
+      "run": "20260513_115203",
+      "frame": 1136,
       "split": "train",
       "n_gates": 0
     },
@@ -2447,11 +3977,56 @@
       "n_gates": 2
     },
     {
+      "id": "20260513_115203_001148",
+      "image": "recordings/20260513_115203/img_001148.png",
+      "label": "recordings/20260513_115203/img_001148.json",
+      "run": "20260513_115203",
+      "frame": 1148,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001153",
+      "image": "recordings/20260513_115203/img_001153.png",
+      "label": "recordings/20260513_115203/img_001153.json",
+      "run": "20260513_115203",
+      "frame": 1153,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001157",
+      "image": "recordings/20260513_115203/img_001157.png",
+      "label": "recordings/20260513_115203/img_001157.json",
+      "run": "20260513_115203",
+      "frame": 1157,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
       "id": "20260513_115203_001158",
       "image": "recordings/20260513_115203/img_001158.png",
       "label": "recordings/20260513_115203/img_001158.json",
       "run": "20260513_115203",
       "frame": 1158,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001159",
+      "image": "recordings/20260513_115203/img_001159.png",
+      "label": "recordings/20260513_115203/img_001159.json",
+      "run": "20260513_115203",
+      "frame": 1159,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001161",
+      "image": "recordings/20260513_115203/img_001161.png",
+      "label": "recordings/20260513_115203/img_001161.json",
+      "run": "20260513_115203",
+      "frame": 1161,
       "split": "train",
       "n_gates": 2
     },
@@ -2492,6 +4067,15 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_001175",
+      "image": "recordings/20260513_115203/img_001175.png",
+      "label": "recordings/20260513_115203/img_001175.json",
+      "run": "20260513_115203",
+      "frame": 1175,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_001183",
       "image": "recordings/20260513_115203/img_001183.png",
       "label": "recordings/20260513_115203/img_001183.json",
@@ -2510,11 +4094,65 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_001193",
+      "image": "recordings/20260513_115203/img_001193.png",
+      "label": "recordings/20260513_115203/img_001193.json",
+      "run": "20260513_115203",
+      "frame": 1193,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_001195",
       "image": "recordings/20260513_115203/img_001195.png",
       "label": "recordings/20260513_115203/img_001195.json",
       "run": "20260513_115203",
       "frame": 1195,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001198",
+      "image": "recordings/20260513_115203/img_001198.png",
+      "label": "recordings/20260513_115203/img_001198.json",
+      "run": "20260513_115203",
+      "frame": 1198,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001199",
+      "image": "recordings/20260513_115203/img_001199.png",
+      "label": "recordings/20260513_115203/img_001199.json",
+      "run": "20260513_115203",
+      "frame": 1199,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001201",
+      "image": "recordings/20260513_115203/img_001201.png",
+      "label": "recordings/20260513_115203/img_001201.json",
+      "run": "20260513_115203",
+      "frame": 1201,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001203",
+      "image": "recordings/20260513_115203/img_001203.png",
+      "label": "recordings/20260513_115203/img_001203.json",
+      "run": "20260513_115203",
+      "frame": 1203,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001204",
+      "image": "recordings/20260513_115203/img_001204.png",
+      "label": "recordings/20260513_115203/img_001204.json",
+      "run": "20260513_115203",
+      "frame": 1204,
       "split": "train",
       "n_gates": 0
     },
@@ -2537,6 +4175,24 @@
       "n_gates": 0
     },
     {
+      "id": "20260513_115203_001216",
+      "image": "recordings/20260513_115203/img_001216.png",
+      "label": "recordings/20260513_115203/img_001216.json",
+      "run": "20260513_115203",
+      "frame": 1216,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001217",
+      "image": "recordings/20260513_115203/img_001217.png",
+      "label": "recordings/20260513_115203/img_001217.json",
+      "run": "20260513_115203",
+      "frame": 1217,
+      "split": "train",
+      "n_gates": 0
+    },
+    {
       "id": "20260513_115203_001224",
       "image": "recordings/20260513_115203/img_001224.png",
       "label": "recordings/20260513_115203/img_001224.json",
@@ -2544,6 +4200,51 @@
       "frame": 1224,
       "split": "train",
       "n_gates": 0
+    },
+    {
+      "id": "20260513_115203_001232",
+      "image": "recordings/20260513_115203/img_001232.png",
+      "label": "recordings/20260513_115203/img_001232.json",
+      "run": "20260513_115203",
+      "frame": 1232,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001234",
+      "image": "recordings/20260513_115203/img_001234.png",
+      "label": "recordings/20260513_115203/img_001234.json",
+      "run": "20260513_115203",
+      "frame": 1234,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001236",
+      "image": "recordings/20260513_115203/img_001236.png",
+      "label": "recordings/20260513_115203/img_001236.json",
+      "run": "20260513_115203",
+      "frame": 1236,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001241",
+      "image": "recordings/20260513_115203/img_001241.png",
+      "label": "recordings/20260513_115203/img_001241.json",
+      "run": "20260513_115203",
+      "frame": 1241,
+      "split": "train",
+      "n_gates": 2
+    },
+    {
+      "id": "20260513_115203_001248",
+      "image": "recordings/20260513_115203/img_001248.png",
+      "label": "recordings/20260513_115203/img_001248.json",
+      "run": "20260513_115203",
+      "frame": 1248,
+      "split": "train",
+      "n_gates": 1
     },
     {
       "id": "20260513_115203_001249",
@@ -2623,6 +4324,51 @@
       "label": "recordings/20260513_115203/img_001277.json",
       "run": "20260513_115203",
       "frame": 1277,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_001278",
+      "image": "recordings/20260513_115203/img_001278.png",
+      "label": "recordings/20260513_115203/img_001278.json",
+      "run": "20260513_115203",
+      "frame": 1278,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_001280",
+      "image": "recordings/20260513_115203/img_001280.png",
+      "label": "recordings/20260513_115203/img_001280.json",
+      "run": "20260513_115203",
+      "frame": 1280,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_001282",
+      "image": "recordings/20260513_115203/img_001282.png",
+      "label": "recordings/20260513_115203/img_001282.json",
+      "run": "20260513_115203",
+      "frame": 1282,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_001285",
+      "image": "recordings/20260513_115203/img_001285.png",
+      "label": "recordings/20260513_115203/img_001285.json",
+      "run": "20260513_115203",
+      "frame": 1285,
+      "split": "train",
+      "n_gates": 3
+    },
+    {
+      "id": "20260513_115203_001287",
+      "image": "recordings/20260513_115203/img_001287.png",
+      "label": "recordings/20260513_115203/img_001287.json",
+      "run": "20260513_115203",
+      "frame": 1287,
       "split": "train",
       "n_gates": 3
     },
