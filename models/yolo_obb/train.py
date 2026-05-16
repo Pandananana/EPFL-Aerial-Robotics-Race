@@ -71,8 +71,6 @@ def main():
     parser.add_argument("--imgsz", type=int, default=320,
                         help="Source frames are 324x244, so 320 avoids upscaling.")
     parser.add_argument("--batch", type=int, default=16)
-    parser.add_argument("--val-fraction", type=float, default=0.1)
-    parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--name", default="train")
     parser.add_argument("--skip-dataset", action="store_true",
                         help="Reuse existing dataset on disk.")
@@ -83,7 +81,7 @@ def main():
         if not yaml_path.exists():
             raise FileNotFoundError(f"No prebuilt dataset at {yaml_path}")
     else:
-        yaml_path = ds.build(val_fraction=args.val_fraction, seed=args.seed)
+        yaml_path = ds.build()
 
     best = train(
         yaml_path,
@@ -95,6 +93,11 @@ def main():
     )
     shutil.copyfile(best, BEST_DST)
     print(f"Copied best checkpoint to {BEST_DST}")
+
+    from ultralytics import YOLO
+
+    print("Evaluating best checkpoint on held-out test split...")
+    YOLO(best).val(data=str(yaml_path), split="test", imgsz=args.imgsz, batch=args.batch)
 
 
 if __name__ == "__main__":

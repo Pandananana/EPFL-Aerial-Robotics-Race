@@ -1,7 +1,7 @@
 """Build dataset/splits.json from labeled images across all recordings.
 
 Policy (encoded below in SPLIT_BY_RUN):
-  20260513_112256       -> test
+  20260513_112205       -> test  (unrelated short flight, held out)
   everything else       -> train
 
 Re-run this whenever you label more images. The manifest is idempotent and
@@ -16,8 +16,8 @@ from pathlib import Path
 
 
 SPLIT_BY_RUN = {
-    "20260513_112256": "test",
-    "20260513_112205": "train",
+    "20260513_112205": "test",
+    "20260513_112256": "train",
     "20260513_115203": "train",
 }
 
