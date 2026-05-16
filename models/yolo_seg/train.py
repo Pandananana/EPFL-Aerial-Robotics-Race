@@ -1,8 +1,8 @@
-"""Train yolo26x-seg on the labeled gate dataset.
+"""Train yolo26m-seg on the labeled gate dataset.
 
 Workflow:
     1. Build the shared YOLO dataset on disk from dataset/splits.json.
-    2. Fine-tune yolo26x-seg (downloaded by Ultralytics on first use).
+    2. Fine-tune yolo26m-seg (downloaded by Ultralytics on first use).
     3. Copy the best checkpoint next to detector.py so predict_gates can find it.
 """
 
@@ -21,9 +21,9 @@ BEST_DST = HERE / "best.pt"
 
 def train(
     yaml_path: Path,
-    base_model: str = "yolo26x-seg.pt",
+    base_model: str = "yolo26m-seg.pt",
     epochs: int = 100,
-    imgsz: int = 320,
+    imgsz: int = 256,
     batch: int = 16,
     name: str = "train",
 ) -> Path:
@@ -39,21 +39,25 @@ def train(
         project=str(RUNS_DIR),
         name=name,
         exist_ok=True,
+        cos_lr=True,
+        patience=30,
+        rect=True,
+        close_mosaic=10,
         # Grayscale frames: hue/saturation jitter is wasted; keep value jitter.
         hsv_h=0.0,
         hsv_s=0.0,
         hsv_v=0.4,
         # Drone rolls/pitches in flight but the camera is never inverted.
-        degrees=15.0,
+        degrees=180.0,
         translate=0.1,
         scale=0.5,
-        shear=0.0,
-        perspective=0.0,
-        flipud=0.0,
+        shear=5.0,
+        perspective=0.0005,
+        flipud=0.5,
         fliplr=0.5,
-        mosaic=1.0,
+        mosaic=0.5,
         mixup=0.1,
-        copy_paste=0.0,
+        copy_paste=0.5,
         erasing=0.2,
     )
     save_dir = Path(result.save_dir) if hasattr(result, "save_dir") else RUNS_DIR / name
@@ -65,11 +69,11 @@ def train(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="yolo26x-seg.pt",
+    parser.add_argument("--model", default="yolo26m-seg.pt",
                         help="Base YOLO Seg checkpoint to fine-tune from.")
     parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--imgsz", type=int, default=320,
-                        help="Source frames are 324x244, so 320 avoids upscaling.")
+    parser.add_argument("--imgsz", type=int, default=256,
+                        help="Source frames are 324x244; rect=True keeps native AR.")
     parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--val-fraction", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=0)
