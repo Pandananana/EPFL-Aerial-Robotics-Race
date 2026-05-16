@@ -1,7 +1,60 @@
 {
-  "version": "5.5.0",
+  "version": "6.2.0",
   "flags": {},
-  "shapes": [],
+  "shapes": [
+    {
+      "label": "gate",
+      "points": [
+        [
+          213.29533678756476,
+          176.9222797927461
+        ],
+        [
+          324.0,
+          134.70003614893358
+        ],
+        [
+          324.0,
+          244.0
+        ],
+        [
+          210.1865284974093,
+          243.76165803108807
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "gate",
+      "points": [
+        [
+          282.20725388601034,
+          159.30569948186528
+        ],
+        [
+          324.0,
+          155.7161384659398
+        ],
+        [
+          324.0,
+          223.5544041450777
+        ],
+        [
+          279.6165803108808,
+          217.0777202072539
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "polygon",
+      "flags": {},
+      "mask": null
+    }
+  ],
   "imagePath": "img_000209.png",
   "imageData": null,
   "imageHeight": 244,
