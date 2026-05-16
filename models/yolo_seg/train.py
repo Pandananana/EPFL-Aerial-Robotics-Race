@@ -9,7 +9,9 @@ Workflow:
 from __future__ import annotations
 
 import argparse
+import random
 import shutil
+import string
 from pathlib import Path
 
 from models.yolo_common import dataset as ds
@@ -75,10 +77,15 @@ def main():
     parser.add_argument("--imgsz", type=int, default=256,
                         help="Source frames are 324x244; rect=True keeps native AR.")
     parser.add_argument("--batch", type=int, default=16)
-    parser.add_argument("--name", default="train")
+    parser.add_argument("--name", default=None,
+                        help="Run name under runs/. Defaults to run_<random5>.")
     parser.add_argument("--skip-dataset", action="store_true",
                         help="Reuse existing dataset on disk.")
     args = parser.parse_args()
+
+    if args.name is None:
+        args.name = "run_" + "".join(random.choices(string.ascii_lowercase, k=5))
+        print(f"No --name given; using {args.name}")
 
     if args.skip_dataset:
         yaml_path = ds.DEFAULT_OUT / "data.yaml"
