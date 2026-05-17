@@ -118,7 +118,15 @@ def main():
     from ultralytics import YOLO
 
     print("Evaluating best checkpoint on held-out test split...")
-    YOLO(best).val(data=str(yaml_path), split="test", imgsz=args.imgsz, batch=args.batch)
+    YOLO(best).val(
+        data=str(yaml_path),
+        split="test",
+        imgsz=args.imgsz,
+        batch=args.batch,
+        project=str(RUNS_DIR),
+        name=f"{args.name}_test",
+        exist_ok=True,
+    )
 
 
 if __name__ == "__main__":
