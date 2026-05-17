@@ -65,6 +65,22 @@ class Gate3D:
 
 
 @dataclass(frozen=True)
+class Waypoint:
+    """Target the controller should fly toward, in world frame.
+
+    x, y, z metres; yaw degrees. `max_speed_mps` caps how fast the controller
+    may drive toward this waypoint — used to differentiate cautious recon
+    flying from fast race laps.
+    """
+    timestamp: float
+    x: float
+    y: float
+    z: float
+    yaw: float
+    max_speed_mps: float
+
+
+@dataclass(frozen=True)
 class Setpoint:
     """Desired hover-commander setpoint, in the cflib send_hover_setpoint format.
 

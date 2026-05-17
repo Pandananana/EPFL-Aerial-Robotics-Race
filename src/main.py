@@ -114,7 +114,7 @@ def build_system(
         gate_height_m=cfg["perception"]["gate_height_m"],
         width_search=tuple(cfg["perception"]["gate_width_search_m"]),
     )
-    planner = Planner()
+    planner = Planner(default_height_m=cfg["control"]["default_height_m"])
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
         speed_mps=cfg["control"]["speed_mps"],
@@ -171,6 +171,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--speed", type=float, default=1.0,
         help="Replay speed multiplier (default 1.0).",
     )
+    ap.add_argument(
+        "--autostart", action="store_true",
+        help="Kick off the autonomous mission (takeoff -> recon -> race -> land) "
+             "as soon as the drone link is connected. Off by default so manual "
+             "control stays in charge.",
+    )
     return ap.parse_args(argv)
 
 
@@ -198,6 +204,9 @@ def main(argv: list[str] | None = None) -> int:
         record = False
 
     sys_ = build_system(cfg, cal, video=video, link=link, record=record)
+
+    if args.autostart:
+        sys_["link"].connected.connect(lambda _s: sys_["planner"].start())
 
     win = FpvWindow(sys_["manual"])
     sys_["video"].frame_ready.connect(win.on_frame)
