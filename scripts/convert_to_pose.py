@@ -23,8 +23,9 @@ Strategy by number of interior (non-boundary) polygon vertices K:
 Run from repo root:
     uv run python tools/convert_to_pose.py
 
-Reads dataset/splits.json. Writes dataset/labels_pose/<run>/img_NNNNNN.json
-(one per labeled frame). Originals under recordings/ are not modified.
+Reads data/splits.json. Writes data/labels/pose/<run>/img_NNNNNN.json
+(one per labeled frame). The seg labels under data/labels/seg/ are not
+modified.
 """
 
 import argparse
@@ -170,8 +171,8 @@ def convert_polygon(points, W: int, H: int):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--splits", type=Path, default=Path("dataset/splits.json"))
-    parser.add_argument("--out", type=Path, default=Path("dataset/labels_pose"))
+    parser.add_argument("--splits", type=Path, default=Path("data/splits.json"))
+    parser.add_argument("--out", type=Path, default=Path("data/labels/pose"))
     args = parser.parse_args()
 
     manifest = json.loads(args.splits.read_text())

@@ -14,7 +14,7 @@ import cv2
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from models.yolo_seg.detector import CONF_THRESHOLD, _load_model
+from src.perception.models.yolo_seg.detector import CONF_THRESHOLD, _load_model
 
 OUTLINE_BGR = (0, 0, 255)
 
@@ -42,7 +42,7 @@ def collect_frames(recordings_dir: Path) -> list[Path]:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--recordings", type=Path, default=Path("recordings"))
+    parser.add_argument("--recordings", type=Path, default=Path("data/recordings"))
     parser.add_argument("--out", type=Path, default=Path("seg_inference.mp4"))
     parser.add_argument("--fps", type=int, default=6)
     parser.add_argument("--scale", type=int, default=2, help="Upscale factor for the output video.")

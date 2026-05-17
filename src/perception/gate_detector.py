@@ -1,7 +1,7 @@
 """Live gate detector: Frame in, GateDetection2D out.
 
-Thin adapter over the offline-trained models in `models/`. The choice of
-model is config-driven; each backend exposes the same
+Thin adapter over the offline-trained models in `src/perception/models/`.
+The choice of model is config-driven; each backend exposes the same
 `predict_gates(image) -> list[(4,2) np.ndarray]` contract documented in
 the project CLAUDE.md, so swapping is a one-line config change.
 
@@ -40,15 +40,15 @@ class GateDetector(QtCore.QObject):
 
 def _load_predictor(name: str) -> Callable[[np.ndarray], list[np.ndarray]]:
     if name == "yolo_pose":
-        from models.yolo_pose.detector import predict_gates
+        from .models.yolo_pose.detector import predict_gates
         return predict_gates
     if name == "yolo_seg":
-        from models.yolo_seg.detector import predict_gates
+        from .models.yolo_seg.detector import predict_gates
         return predict_gates
     if name == "yolo_obb":
-        from models.yolo_obb.detector import predict_gates
+        from .models.yolo_obb.detector import predict_gates
         return predict_gates
     if name == "hough":
-        from models.hough_detector import predict_gates
+        from .models.hough_detector import predict_gates
         return predict_gates
     raise ValueError(f"unknown detector: {name!r}")

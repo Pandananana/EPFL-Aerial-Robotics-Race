@@ -49,10 +49,16 @@ class CrazyflieLink(QtCore.QObject):
         self._timer.timeout.connect(self._send_setpoint)
         self._timer.setInterval(int(1000.0 / setpoint_rate_hz))
 
+    @QtCore.pyqtSlot(object)
     def set_setpoint(self, sp: Setpoint) -> None:
-        """Slot — push a desired setpoint. The radio timer will send the
-        latest one on its next tick."""
+        """Push a desired setpoint. The radio timer will send the latest
+        one on its next tick."""
         self._setpoint.set(sp)
+
+    @QtCore.pyqtSlot()
+    def send_stop(self) -> None:
+        """Immediately send a stop setpoint (motors off). Use for E-stop."""
+        self.cf.commander.send_stop_setpoint()
 
     def open(self) -> None:
         self.cf.open_link(self._uri)

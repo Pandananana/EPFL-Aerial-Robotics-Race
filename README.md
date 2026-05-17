@@ -62,7 +62,7 @@ before flying.
 
 ```bash
 uv run python scripts/live_viewer.py    # full live stack with FPV window
-uv run python scripts/replay_log.py recordings/<run>   # replay through perception, no drone
+uv run python scripts/replay_log.py data/recordings/<run>   # replay through perception, no drone
 ```
 
 Module layout:
@@ -70,20 +70,22 @@ Module layout:
 - `src/messages.py` — shared dataclasses (Frame, DronePose, GateDetection2D, Gate3D, Setpoint)
 - `src/bus.py` — `Latest[T]` latch for "most recent value" sharing (Qt signals handle events)
 - `src/io/` — UDP video stream, Crazyflie radio link, disk recorder, recording replay
-- `src/perception/` — gate detector (wraps `models/`), 3D pose estimator
-- `src/planning/` — waypoint planner + controller (stubs; owned by the planning team)
+- `src/perception/` — gate detector (wraps `src/perception/models/`), 3D pose estimator
+- `src/perception/models/` — detector backends + shared YOLO dataset builder + committed `best.pt` weights
+- `src/control/` — planner, controller (stubs), and keyboard manual override
+- `src/ui/` — FPV display window
 - `src/main.py` — orchestrator: instantiates modules and wires their signals/slots
 
 ## Labeling workflow
 
 ```bash
-uv run python tools/sample_to_label.py recordings/<run> --n 50
-uvx labelme to_label --output recordings/<run> --labels gate --nodata --autosave
-uv run python tools/finalize_no_gates.py recordings/<run>
+uv run python tools/sample_to_label.py data/recordings/<run> --n 50
+uvx labelme to_label --output data/labels/seg/<run> --labels gate --nodata --autosave
+uv run python tools/finalize_no_gates.py data/recordings/<run>
 uv run python tools/build_splits.py
 ```
 
-`sample_to_label.py` symlinks a random subset of _unlabeled_ PNGs into `to_label/` (gitignored). `--output` makes labelme write the JSONs back next to the originals. After the batch, `finalize_no_gates.py` writes empty-shape JSONs for any sampled image you skipped past. Finally rebuild the manifest.
+`sample_to_label.py` symlinks a random subset of _unlabeled_ PNGs into `to_label/` (gitignored). The labelme `--output` flag drops JSONs into the parallel `data/labels/seg/<run>/` tree, not next to the images. After the batch, `finalize_no_gates.py` writes empty-shape JSONs for any sampled image you skipped past. Finally rebuild the manifest.
 
 To pre-label new recordings with the current YOLO seg model (only writes sidecars for images that don't already have one), run:
 
@@ -93,11 +95,11 @@ uv run python tools/auto_label.py
 
 ## Training and evaluation
 
-Train a YOLO detector (rebuilds the YOLO-format dataset from `dataset/splits.json`, fine-tunes, copies `best.pt` next to the detector, then evaluates on the test split):
+Train a YOLO detector (rebuilds the YOLO-format dataset from `data/splits.json`, fine-tunes, copies `best.pt` next to the detector, then evaluates on the test split):
 
 ```bash
-uv run python -m models.yolo_seg.train
-uv run python -m models.yolo_obb.train
+uv run python -m src.perception.models.yolo_seg.train
+uv run python -m src.perception.models.yolo_obb.train
 ```
 
 Evaluate any detector on the test split:

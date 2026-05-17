@@ -1,6 +1,6 @@
 """Replay a recording through the perception pipeline (no drone, no UDP).
 
-Reads a recordings/<id>/ directory, plays its frames + poses back through
+Reads a data/recordings/<id>/ directory, plays its frames + poses back through
 ReplayThread, runs them through GateDetector + PoseEstimator, and prints
 each Gate3D result. Useful for sanity-checking the detector and pose
 estimator together without flying.
@@ -27,7 +27,7 @@ from src.perception.pose_estimator import PoseEstimator  # noqa: E402
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("recording", type=Path, help="recordings/<id>/")
+    ap.add_argument("recording", type=Path, help="data/recordings/<id>/")
     ap.add_argument("--speed", type=float, default=4.0,
                     help="Replay speed multiplier (default 4x).")
     args = ap.parse_args()

@@ -28,4 +28,4 @@ perception:
   gate_width_search_m: [0.20, 1.21, 0.01]  # arange(start, stop, step)
 
 recording:
-  base_dir: "recordings"
+  base_dir: "data/recordings"

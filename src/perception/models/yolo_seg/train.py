@@ -1,12 +1,3 @@
-"""Train yolo26x-pose on the labeled gate dataset.
-
-Workflow:
-    1. Build the pose YOLO dataset on disk from dataset/splits.json and
-       dataset/labels_pose/ (4 corners per gate, TL/TR/BR/BL order).
-    2. Fine-tune yolo26x-pose (downloaded by Ultralytics on first use).
-    3. Copy the best checkpoint next to detector.py so predict_gates can find it.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -15,7 +6,7 @@ import shutil
 import string
 from pathlib import Path
 
-from models.yolo_common import dataset_pose as ds
+from src.perception.models.yolo_common import dataset as ds
 
 HERE = Path(__file__).resolve().parent
 RUNS_DIR = HERE / "runs"
@@ -24,8 +15,8 @@ BEST_DST = HERE / "best.pt"
 
 def train(
     yaml_path: Path,
-    base_model: str = "yolo26x-pose.pt",
-    epochs: int = 200,
+    base_model: str = "yolo26x-seg.pt",
+    epochs: int = 100,
     imgsz: int = 320,
     batch: int = 32,
     name: str = "train",
@@ -54,12 +45,12 @@ def train(
         dropout=0.1,
         label_smoothing=0.05,
         weight_decay=0.0005,
+        # Seg-specific: finer masks for thin LED outlines
+        mask_ratio=2,
+        overlap_mask=True,
         single_cls=True,
-        # Shape / framing: rect=True groups batches by aspect ratio so 324x244
-        # frames train without square-letterbox padding. Ultralytics treats
-        # rect and mosaic as mutually exclusive, so mosaic is forced to 0.
+        # Shape / framing
         rect=True,
-        mosaic=0.0,
         close_mosaic=0,
         # Grayscale frames: hue/saturation jitter is wasted; keep value jitter.
         hsv_h=0.0,
@@ -67,8 +58,6 @@ def train(
         hsv_v=0.4,
         bgr=0.0,
         # Drone rolls/pitches in flight but the camera is never inverted.
-        # fliplr is safe because dataset_pose.yaml sets flip_idx=[1,0,3,2],
-        # which swaps TL<->TR and BR<->BL on horizontal flip.
         degrees=20.0,
         translate=0.1,
         scale=0.5,
@@ -76,8 +65,9 @@ def train(
         perspective=0.0005,
         flipud=0.0,
         fliplr=0.5,
-        # mixup/copy_paste would scramble per-object keypoint identity.
-        # erasing can occlude keypoints that the loss still supervises.
+        # Composition: LED outlines are thin and the segment is the inner hole,
+        # so copy_paste would paste a dark patch with no surrounding LEDs.
+        mosaic=0.2,
         mixup=0.0,
         copy_paste=0.0,
         erasing=0.0,
@@ -91,8 +81,8 @@ def train(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="yolo26x-pose.pt",
-                        help="Base YOLO pose checkpoint to fine-tune from.")
+    parser.add_argument("--model", default="yolo26x-seg.pt",
+                        help="Base YOLO Seg checkpoint to fine-tune from.")
     parser.add_argument("--epochs", type=int, default=200)
     parser.add_argument("--imgsz", type=int, default=320,
                         help="Source frames are 324x244; rect=True keeps native AR.")

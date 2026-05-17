@@ -1,11 +1,12 @@
-"""Build dataset/splits.json from labeled images across all recordings.
+"""Build data/splits.json from labeled images across all recordings.
 
 Policy (encoded below in SPLIT_BY_RUN):
   20260513_112205       -> test  (unrelated short flight, held out)
   everything else       -> train
 
 Re-run this whenever you label more images. The manifest is idempotent and
-deterministic — it just reflects whatever .json sidecars currently exist.
+deterministic — it just reflects whatever .json sidecars currently exist
+under data/labels/seg/<run>/.
 """
 
 import argparse
@@ -26,9 +27,10 @@ def load_label(path: Path) -> dict:
     return json.loads(path.read_text())
 
 
-def collect_items(recordings_dir: Path, repo_root: Path) -> list[dict]:
+def collect_items(recordings_dir: Path, labels_dir: Path, repo_root: Path) -> list[dict]:
     items = []
     recordings_abs = recordings_dir.resolve()
+    labels_abs = labels_dir.resolve()
     for run_dir in sorted(recordings_abs.iterdir()):
         if not run_dir.is_dir():
             continue
@@ -38,8 +40,12 @@ def collect_items(recordings_dir: Path, repo_root: Path) -> list[dict]:
             continue
         split = SPLIT_BY_RUN[run]
 
-        for label_path in sorted(run_dir.glob("img_*.json")):
-            image_path = label_path.with_suffix(".png")
+        run_labels_dir = labels_abs / run
+        if not run_labels_dir.is_dir():
+            continue
+
+        for label_path in sorted(run_labels_dir.glob("img_*.json")):
+            image_path = run_dir / label_path.with_suffix(".png").name
             if not image_path.exists():
                 print(f"warning: label without image: {label_path}")
                 continue
@@ -80,12 +86,13 @@ def summarize(items: list[dict]) -> dict:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--recordings", type=Path, default=Path("recordings"))
-    parser.add_argument("--out", type=Path, default=Path("dataset/splits.json"))
+    parser.add_argument("--recordings", type=Path, default=Path("data/recordings"))
+    parser.add_argument("--labels", type=Path, default=Path("data/labels/seg"))
+    parser.add_argument("--out", type=Path, default=Path("data/splits.json"))
     args = parser.parse_args()
 
     repo_root = Path.cwd()
-    items = collect_items(args.recordings, repo_root)
+    items = collect_items(args.recordings, args.labels, repo_root)
     stats = summarize(items)
 
     manifest = {

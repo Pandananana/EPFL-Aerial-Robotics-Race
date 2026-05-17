@@ -1,3 +1,11 @@
+"""Train yolo26l-obb on the labeled gate dataset.
+
+Workflow:
+    1. Build the shared YOLO dataset on disk from data/splits.json.
+    2. Fine-tune yolo26l-obb (downloaded by Ultralytics on first use).
+    3. Copy the best checkpoint next to detector.py so predict_gates can find it.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -6,7 +14,7 @@ import shutil
 import string
 from pathlib import Path
 
-from models.yolo_common import dataset as ds
+from src.perception.models.yolo_common import dataset as ds
 
 HERE = Path(__file__).resolve().parent
 RUNS_DIR = HERE / "runs"
@@ -15,10 +23,10 @@ BEST_DST = HERE / "best.pt"
 
 def train(
     yaml_path: Path,
-    base_model: str = "yolo26x-seg.pt",
+    base_model: str = "yolo26l-obb.pt",
     epochs: int = 100,
     imgsz: int = 320,
-    batch: int = 32,
+    batch: int = 16,
     name: str = "train",
 ) -> Path:
     """Run YOLO training; return the path to the best.pt checkpoint."""
@@ -33,44 +41,22 @@ def train(
         project=str(RUNS_DIR),
         name=name,
         exist_ok=True,
-        cache="ram",
-        # Optimization
-        cos_lr=True,
-        lr0=0.005,
-        lrf=0.01,
-        warmup_epochs=5.0,
-        patience=30,
-        amp=True,
-        # Regularization
-        dropout=0.1,
-        label_smoothing=0.05,
-        weight_decay=0.0005,
-        # Seg-specific: finer masks for thin LED outlines
-        mask_ratio=2,
-        overlap_mask=True,
-        single_cls=True,
-        # Shape / framing
-        rect=True,
-        close_mosaic=0,
         # Grayscale frames: hue/saturation jitter is wasted; keep value jitter.
         hsv_h=0.0,
         hsv_s=0.0,
         hsv_v=0.4,
-        bgr=0.0,
         # Drone rolls/pitches in flight but the camera is never inverted.
-        degrees=20.0,
+        degrees=15.0,
         translate=0.1,
         scale=0.5,
-        shear=5.0,
-        perspective=0.0005,
+        shear=0.0,
+        perspective=0.0,
         flipud=0.0,
         fliplr=0.5,
-        # Composition: LED outlines are thin and the segment is the inner hole,
-        # so copy_paste would paste a dark patch with no surrounding LEDs.
-        mosaic=0.2,
-        mixup=0.0,
+        mosaic=1.0,
+        mixup=0.1,
         copy_paste=0.0,
-        erasing=0.0,
+        erasing=0.2,
     )
     save_dir = Path(result.save_dir) if hasattr(result, "save_dir") else RUNS_DIR / name
     best = save_dir / "weights" / "best.pt"
@@ -81,12 +67,12 @@ def train(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="yolo26x-seg.pt",
-                        help="Base YOLO Seg checkpoint to fine-tune from.")
-    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--model", default="yolo26l-obb.pt",
+                        help="Base YOLO OBB checkpoint to fine-tune from.")
+    parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--imgsz", type=int, default=320,
-                        help="Source frames are 324x244; rect=True keeps native AR.")
-    parser.add_argument("--batch", type=int, default=32)
+                        help="Source frames are 324x244, so 320 avoids upscaling.")
+    parser.add_argument("--batch", type=int, default=16)
     parser.add_argument("--name", default=None,
                         help="Run name under runs/. Defaults to run_<random5>.")
     parser.add_argument("--skip-dataset", action="store_true",

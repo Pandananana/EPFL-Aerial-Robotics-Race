@@ -1,9 +1,9 @@
 """Run the YOLO seg detector over recording dirs and emit labelme JSONs.
 
-Skips any image that already has a sidecar JSON, so existing human labels are
-never overwritten. Outputs match the labelme polygon schema used elsewhere in
-this repo (see recordings/.../img_*.json) so the files can be opened directly
-in labelme for review.
+Skips any image that already has a label JSON under data/labels/seg/<run>/,
+so existing human labels are never overwritten. Outputs match the labelme
+polygon schema used elsewhere in this repo so the files can be opened
+directly in labelme for review.
 """
 
 from __future__ import annotations
@@ -16,14 +16,15 @@ from pathlib import Path
 import cv2
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from models.yolo_seg.detector import predict_gates
+from src.perception.models.yolo_seg.detector import predict_gates
 
 
 LABELME_VERSION = "6.2.0"
 DEFAULT_DIRS = [
-    Path("recordings/20260513_112256"),
-    Path("recordings/20260513_115203"),
+    Path("data/recordings/20260513_112256"),
+    Path("data/recordings/20260513_115203"),
 ]
+DEFAULT_LABELS_ROOT = Path("data/labels/seg")
 
 
 def build_payload(image_path: Path, quads, height: int, width: int) -> dict:
@@ -51,13 +52,14 @@ def build_payload(image_path: Path, quads, height: int, width: int) -> dict:
     }
 
 
-def process_dir(images_dir: Path, dry_run: bool) -> tuple[int, int, int]:
+def process_dir(images_dir: Path, labels_root: Path, dry_run: bool) -> tuple[int, int, int]:
     pngs = sorted(images_dir.glob("*.png"))
+    labels_dir = labels_root / images_dir.name
     written = 0
     skipped = 0
     failed = 0
     for png in pngs:
-        json_path = png.with_suffix(".json")
+        json_path = labels_dir / png.with_suffix(".json").name
         if json_path.exists():
             skipped += 1
             continue
@@ -72,8 +74,9 @@ def process_dir(images_dir: Path, dry_run: bool) -> tuple[int, int, int]:
         if dry_run:
             print(f"  would write {json_path} ({len(quads)} gates)")
         else:
+            json_path.parent.mkdir(parents=True, exist_ok=True)
             json_path.write_text(json.dumps(payload, indent=2))
-            print(f"  wrote {json_path.name} ({len(quads)} gates)")
+            print(f"  wrote {json_path} ({len(quads)} gates)")
         written += 1
     return written, skipped, failed
 
@@ -87,6 +90,8 @@ def main():
         default=DEFAULT_DIRS,
         help="Recording dirs to process. Default: %(default)s",
     )
+    parser.add_argument("--labels-root", type=Path, default=DEFAULT_LABELS_ROOT,
+                        help="Root dir for labelme JSONs. Run name appended.")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -96,7 +101,7 @@ def main():
             print(f"skipping {d}: not a directory")
             continue
         print(f"processing {d}")
-        w, s, f = process_dir(d, args.dry_run)
+        w, s, f = process_dir(d, args.labels_root, args.dry_run)
         total_written += w
         total_skipped += s
         total_failed += f

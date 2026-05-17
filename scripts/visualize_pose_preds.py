@@ -12,9 +12,9 @@ up outside the original frame.
   white box  original image bounds
 
 Sources (pick one):
-  --splits dataset/splits.json [--split test|train|all]   labeled subset
+  --splits data/splits.json [--split test|train|all]      labeled subset
   --images-dir PATH                                       any folder of PNGs
-  --recording NAME                                        recordings/<NAME>
+  --recording NAME                                        data/recordings/<NAME>
 
 Keys: space / right = next, a / left = previous, q / Esc = quit.
 
@@ -33,7 +33,9 @@ import cv2
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from models.yolo_pose import predict_gates
+from src.perception.models.yolo_pose import predict_gates
+
+SEG_LABELS_ROOT = Path("data/labels/seg")
 
 CORNER_NAMES = ("TL", "TR", "BR", "BL")
 PAD_BG = (50, 50, 50)
@@ -54,16 +56,26 @@ def collect_from_splits(splits_path: Path, split: str) -> list[dict]:
     ]
 
 
-def collect_from_dir(images_dir: Path) -> list[dict]:
+def collect_from_dir(images_dir: Path, labels_root: Path | None = None) -> list[dict]:
+    """Walk a folder of PNGs, optionally pairing each with its seg label.
+
+    `labels_root` is the root of the parallel label tree (e.g.
+    data/labels/seg). When set, labels are looked up at
+    labels_root/<run>/img_NNNNNN.json. When None, no GT label is associated.
+    """
     paths = sorted(images_dir.glob("img_*.png"))
     if not paths:
         paths = sorted(images_dir.glob("*.png"))
     out = []
     for p in paths:
-        sidecar = p.with_suffix(".json")
+        sidecar = (
+            labels_root / images_dir.name / p.with_suffix(".json").name
+            if labels_root is not None
+            else None
+        )
         out.append({
             "image": p,
-            "label": sidecar if sidecar.exists() else None,
+            "label": sidecar if sidecar is not None and sidecar.exists() else None,
             "id": f"{p.parent.name}/{p.stem}",
         })
     return out
@@ -119,12 +131,12 @@ def render(entry: dict, pad: int, scale: int, show_gt: bool) -> np.ndarray | Non
 def main():
     parser = argparse.ArgumentParser()
     src = parser.add_mutually_exclusive_group()
-    src.add_argument("--splits", type=Path, default=Path("dataset/splits.json"),
+    src.add_argument("--splits", type=Path, default=Path("data/splits.json"),
                      help="labeled-manifest source (used when --images-dir / --recording omitted)")
     src.add_argument("--images-dir", type=Path,
                      help="step through any directory of PNG images")
     src.add_argument("--recording", type=str,
-                     help="shorthand for --images-dir recordings/<NAME>")
+                     help="shorthand for --images-dir data/recordings/<NAME>")
     parser.add_argument("--split", choices=["train", "test", "all"], default="all",
                         help="when sourcing from --splits")
     parser.add_argument("--show-gt", action="store_true",
@@ -134,8 +146,8 @@ def main():
     args = parser.parse_args()
 
     if args.recording:
-        entries = collect_from_dir(Path("recordings") / args.recording)
-        source_desc = f"recordings/{args.recording}"
+        entries = collect_from_dir(Path("data/recordings") / args.recording, SEG_LABELS_ROOT)
+        source_desc = f"data/recordings/{args.recording}"
     elif args.images_dir:
         entries = collect_from_dir(args.images_dir)
         source_desc = str(args.images_dir)

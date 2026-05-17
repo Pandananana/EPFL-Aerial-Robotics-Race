@@ -1,12 +1,13 @@
-"""Build a YOLO pose dataset from dataset/labels_pose/.
+"""Build a YOLO pose dataset from data/labels/pose/.
 
 Layout produced (under <out>/):
     data.yaml
     images/{train,val,test}/<id>.png
     labels/{train,val,test}/<id>.txt
 
-Reads pose labels from `dataset/labels_pose/<run>/img_NNNNNN.json` (produced
-by `tools/convert_to_pose.py`), not from the labelme JSONs under recordings/.
+Reads pose labels from `data/labels/pose/<run>/img_NNNNNN.json` (produced
+by `tools/convert_to_pose.py`), not from the labelme seg JSONs under
+data/labels/seg/.
 The split partition (train/val/test) is shared with the polygon dataset
 builder so the held-out test run stays consistent across model types.
 
@@ -37,8 +38,8 @@ from .dataset import (
     _partition_train_val,
 )
 
-DEFAULT_POSE_LABELS = REPO_ROOT / "dataset" / "labels_pose"
-DEFAULT_OUT = REPO_ROOT / "models" / "yolo_pose" / "data"
+DEFAULT_POSE_LABELS = REPO_ROOT / "data" / "labels" / "pose"
+DEFAULT_OUT = REPO_ROOT / "src" / "perception" / "models" / "yolo_pose" / "data"
 
 # TL, TR, BR, BL — on horizontal flip, swap TL<->TR and BR<->BL.
 FLIP_IDX = [1, 0, 3, 2]

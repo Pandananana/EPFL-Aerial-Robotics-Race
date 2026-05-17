@@ -75,8 +75,8 @@ def render(item, pose_data, pad: int, scale: int):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--splits", type=Path, default=Path("dataset/splits.json"))
-    parser.add_argument("--pose-dir", type=Path, default=Path("dataset/labels_pose"))
+    parser.add_argument("--splits", type=Path, default=Path("data/splits.json"))
+    parser.add_argument("--pose-dir", type=Path, default=Path("data/labels/pose"))
     parser.add_argument("--split", choices=["train", "test", "all"], default="all")
     parser.add_argument("--only-unconverted", action="store_true",
                         help="show only frames that have at least one unconverted gate")

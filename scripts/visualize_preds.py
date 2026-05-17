@@ -25,7 +25,7 @@ def main():
     args = parser.parse_args()
     predict_gates = importlib.import_module(MODEL_MODULES[args.model]).predict_gates
 
-    manifest = json.loads(Path("dataset/splits.json").read_text())
+    manifest = json.loads(Path("data/splits.json").read_text())
     items = [it for it in manifest["items"] if it["split"] == "test"]
 
     i = 0

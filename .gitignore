@@ -12,7 +12,7 @@ wheels/
 .DS_Store
 cache
 to_label
-models/**/data
-models/**/runs
+src/perception/models/**/data
+src/perception/models/**/runs
 *.pt
 videos

@@ -1,7 +1,7 @@
 """Write empty-shapes labelme JSONs for sampled images that weren't labeled.
 
 After a labeling batch in labelme: anything in to_label/ that doesn't have a
-matching .json in the originals directory was reviewed and found to contain
+matching .json under data/labels/seg/<run>/ was reviewed and found to contain
 no gates (or no gates passing the size/visibility thresholds). This script
 materializes that as an empty labelme JSON so those decisions are recorded.
 
@@ -16,6 +16,7 @@ import cv2
 
 
 LABELME_VERSION = "5.5.0"
+DEFAULT_LABELS_ROOT = Path("data/labels/seg")
 
 
 def write_empty_json(image_path: Path, json_path: Path) -> None:
@@ -35,7 +36,9 @@ def write_empty_json(image_path: Path, json_path: Path) -> None:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("images_dir", type=Path, help="Directory with the original PNGs and JSONs")
+    parser.add_argument("images_dir", type=Path, help="Directory with the original PNGs (e.g. data/recordings/<run>)")
+    parser.add_argument("--labels-root", type=Path, default=DEFAULT_LABELS_ROOT,
+                        help="Root dir for seg labels. Run name (images_dir.name) is appended.")
     parser.add_argument("--to-label", type=Path, default=Path("to_label"), help="Symlink working dir")
     parser.add_argument(
         "--all-unlabeled",
@@ -44,6 +47,8 @@ def main():
     )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+
+    labels_dir = args.labels_root / args.images_dir.name
 
     if args.all_unlabeled:
         candidates = sorted(args.images_dir.glob("*.png"))
@@ -60,13 +65,14 @@ def main():
     skipped = 0
     for png in candidates:
         original = args.images_dir / png.name
-        json_path = original.with_suffix(".json")
+        json_path = labels_dir / png.with_suffix(".json").name
         if json_path.exists():
             skipped += 1
             continue
         if args.dry_run:
             print(f"would write empty JSON for {png.name}")
         else:
+            json_path.parent.mkdir(parents=True, exist_ok=True)
             write_empty_json(original, json_path)
         written += 1
 

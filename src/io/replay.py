@@ -1,6 +1,6 @@
 """Replay a recording directory as if it were a live source.
 
-Reads recordings/<id>/measurements.csv and re-emits Frame + DronePose
+Reads data/recordings/<id>/measurements.csv and re-emits Frame + DronePose
 messages at the rate they were originally captured (scaled by `speed`).
 Lets perception/planning iterate without flying — wire the same signals
 where you'd wire UdpVideoThread / CrazyflieLink.

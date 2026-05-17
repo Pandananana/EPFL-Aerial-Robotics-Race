@@ -1,4 +1,4 @@
-"""Build a shared YOLO dataset (OBB + Seg) from dataset/splits.json.
+"""Build a shared YOLO dataset (OBB + Seg) from data/splits.json.
 
 Layout produced (under <out>/):
     data.yaml
@@ -25,9 +25,9 @@ import json
 import shutil
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MANIFEST = REPO_ROOT / "dataset" / "splits.json"
-DEFAULT_OUT = REPO_ROOT / "models" / "yolo_common" / "data"
+REPO_ROOT = Path(__file__).resolve().parents[4]
+DEFAULT_MANIFEST = REPO_ROOT / "data" / "splits.json"
+DEFAULT_OUT = REPO_ROOT / "src" / "perception" / "models" / "yolo_common" / "data"
 
 VAL_RUN = "20260513_115203"
 VAL_TAIL = 50
