@@ -1,8 +1,9 @@
 """Maps the current waypoint + drone pose to a Setpoint.
 
-STUB — owned by the planning/controls team. The current implementation
-caches the latest DronePose and emits nothing; CrazyflieLink will not
-move the drone until `setpoint_ready` actually fires.
+STUB — owned by the controls team. The current implementation caches
+the latest DronePose and emits nothing; CrazyflieLink will not move the
+drone until `setpoint_ready` actually fires. While this is unwired,
+ManualControl is the only thing publishing setpoints.
 
 Output Setpoint follows the cflib send_hover_setpoint format:
   vx, vy  (body-frame velocities, m/s)
