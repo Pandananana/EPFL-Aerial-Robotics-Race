@@ -12,9 +12,7 @@ wheels/
 .DS_Store
 cache
 to_label
-models/yolo_common/data
-models/yolo_obb/data
-models/yolo_obb/runs
-models/yolo_seg/runs
+models/**/data
+models/**/runs
 *.pt
 videos
