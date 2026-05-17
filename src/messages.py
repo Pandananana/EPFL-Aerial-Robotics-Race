@@ -17,10 +17,12 @@ import numpy as np
 
 @dataclass(frozen=True)
 class Frame:
-    """One grayscale camera frame, 324x244, uint8."""
+    """One camera frame, uint8. Grayscale (H, W) from the real AI-deck;
+    BGR (H, W, 3) from the Webots backend, which forwards the simulator's
+    native colour image without any down-conversion."""
     timestamp: float
     seq: int
-    image: np.ndarray  # (H, W) uint8
+    image: np.ndarray
 
 
 @dataclass(frozen=True)

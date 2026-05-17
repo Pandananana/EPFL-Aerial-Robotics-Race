@@ -51,4 +51,7 @@ def _load_predictor(name: str) -> Callable[[np.ndarray], list[np.ndarray]]:
     if name == "hough":
         from .models.hough_detector import predict_gates
         return predict_gates
+    if name == "pink":
+        from .models.pink_detector import predict_gates
+        return predict_gates
     raise ValueError(f"unknown detector: {name!r}")

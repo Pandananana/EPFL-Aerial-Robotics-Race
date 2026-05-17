@@ -38,15 +38,13 @@ webots:
   # this Python process to attach.
   world: "sim/worlds/race.wbt"
   robot_name: "crazyflie"
-  # Webots' simulated camera resolution. The backend converts BGRA -> grayscale
-  # and resizes to video.width x video.height so the perception pipeline sees
-  # the same shape as the real AI-deck stream.
-  sim_camera_width: 300
-  sim_camera_height: 300
+  # The backend forwards the simulator's native BGR camera frames straight
+  # through — no grayscale conversion or resizing — and main.py forces the
+  # detector to "pink" so we use the colour signal. The sim doesn't try to
+  # emulate the real AI-deck's black-and-white output.
   # Emission rates, matching the real Crazyflie: AI-deck streams JPEGs at
   # ~3 fps, the log block sends pose at 100 Hz. The Webots loop still ticks
   # every basicTimeStep (8 ms) so the PID stays stable; these only throttle
-  # what we forward into the Qt pipeline (the YOLO detector can't keep up
-  # with 125 fps, which backs up the signal queue and hangs the sim).
+  # what we forward into the Qt pipeline.
   camera_fps: 3.0
   pose_rate_hz: 100.0

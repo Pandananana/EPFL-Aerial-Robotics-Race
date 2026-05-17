@@ -9,9 +9,11 @@ Per-tick (`basicTimeStep`, 8 ms = 125 Hz in the bundled world):
 
   * Read GPS + IMU + gyro. Emit DronePose throttled to `pose_rate_hz`
     (rpy in degrees, like the real Crazyflie log stream).
-  * Read the simulated camera (BGRA at sim_camera_width x sim_camera_height),
-    convert to grayscale and resize to video.width x video.height so it
-    matches the AI-deck format. Emit Frame throttled to `camera_fps`.
+  * Read the simulated camera (BGRA at the camera's configured size) and
+    forward it to perception as native BGR — we no longer convert to
+    grayscale or resize to the AI-deck shape, because the sim doesn't
+    emulate the real camera anyway and the pink-panel detector needs the
+    colour signal.
   * If a hover Setpoint has been pushed (vx, vy, yaw_rate, height — the
     cflib hover-commander surface), run the cascaded controller in
     `_webots_pid` to get motor PWMs and apply them. Without a setpoint or
@@ -20,7 +22,7 @@ Per-tick (`basicTimeStep`, 8 ms = 125 Hz in the bundled world):
 The emission rates match the real Crazyflie (AI-deck JPEG stream ~3 fps,
 log block 100 Hz). The PID still runs every tick so attitude control stays
 stable; only what is forwarded into the Qt pipeline is throttled. Emitting
-at the full 125 Hz floods the YOLO detector and hangs the sim.
+at the full 125 Hz floods the detector and hangs the sim.
 """
 
 from __future__ import annotations
@@ -45,16 +47,12 @@ class WebotsBackend(QtCore.QThread):
         self,
         *,
         robot_name: str,
-        out_width: int,
-        out_height: int,
         camera_fps: float,
         pose_rate_hz: float,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._robot_name = robot_name
-        self._out_width = out_width
-        self._out_height = out_height
         self._camera_period = 1.0 / camera_fps
         self._pose_period = 1.0 / pose_rate_hz
         self._setpoint: Latest[Setpoint] = Latest()
@@ -174,9 +172,6 @@ class WebotsBackend(QtCore.QThread):
             return
         h, w = camera.getHeight(), camera.getWidth()
         bgra = np.frombuffer(raw, np.uint8).reshape((h, w, 4))
-        gray = cv2.cvtColor(bgra, cv2.COLOR_BGRA2GRAY)
-        if (w, h) != (self._out_width, self._out_height):
-            gray = cv2.resize(gray, (self._out_width, self._out_height),
-                              interpolation=cv2.INTER_AREA)
+        bgr = cv2.cvtColor(bgra, cv2.COLOR_BGRA2BGR)
         self._seq += 1
-        self.frame_ready.emit(Frame(timestamp=timestamp, seq=self._seq, image=gray))
+        self.frame_ready.emit(Frame(timestamp=timestamp, seq=self._seq, image=bgr))

@@ -44,7 +44,10 @@ class FpvWindow(QtWidgets.QWidget):
     def on_frame(self, frame: Frame) -> None:
         img = frame.image
         h, w = img.shape[:2]
-        rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        if img.ndim == 2:
+            rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        else:
+            rgb = cv2.cvtColor(img[:, :, :3], cv2.COLOR_BGR2RGB)
         det = self._latest_det
         if det is not None and det.frame_seq == frame.seq:
             for q in det.corners_px:

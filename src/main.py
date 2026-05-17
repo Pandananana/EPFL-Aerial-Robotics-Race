@@ -92,8 +92,6 @@ def build_webots_backend(cfg: dict) -> WebotsBackend:
     """Single WebotsBackend serves as both VideoSource and DroneLink."""
     return WebotsBackend(
         robot_name=cfg["webots"]["robot_name"],
-        out_width=cfg["video"]["width"],
-        out_height=cfg["video"]["height"],
         camera_fps=cfg["webots"]["camera_fps"],
         pose_rate_hz=cfg["webots"]["pose_rate_hz"],
     )
@@ -188,6 +186,10 @@ def main(argv: list[str] | None = None) -> int:
         backend = build_webots_backend(cfg)
         video, link = backend, backend
         record = True
+        # The Webots assignment world has emissive pink-panel gates; the
+        # HSV-based pink detector is purpose-built for them and avoids the
+        # domain gap that trips up the AI-deck-trained YOLO models.
+        cfg["perception"]["detector"] = "pink"
     else:
         if args.recording is None:
             raise SystemExit("--source replay requires --recording <dir>")
