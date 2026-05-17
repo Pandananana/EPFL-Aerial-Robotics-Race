@@ -34,6 +34,7 @@ import numpy as np
 from PyQt6 import QtCore
 
 from src.bus import Latest
+from src.io.webots.launcher import ROBOT_NAME
 from src.io.webots.pid import HoverController, _Sensors
 from src.messages import DronePose, Frame, Setpoint
 
@@ -46,13 +47,11 @@ class WebotsBackend(QtCore.QThread):
     def __init__(
         self,
         *,
-        robot_name: str,
         camera_fps: float,
         pose_rate_hz: float,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
-        self._robot_name = robot_name
         self._camera_period = 1.0 / camera_fps
         self._pose_period = 1.0 / pose_rate_hz
         self._setpoint: Latest[Setpoint] = Latest()
@@ -111,7 +110,7 @@ class WebotsBackend(QtCore.QThread):
         if robot.step(timestep) == -1:
             return
         last_xyz = np.array(gps.getValues(), dtype=np.float64)
-        self.connected.emit(f"webots:{self._robot_name}")
+        self.connected.emit(f"webots:{ROBOT_NAME}")
 
         controller = HoverController()
         next_pose_t = 0.0

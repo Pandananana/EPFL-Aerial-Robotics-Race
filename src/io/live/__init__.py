@@ -16,10 +16,6 @@ def build_live(cfg: dict) -> tuple[VideoSource, DroneLink]:
         aideck_ip=cfg["network"]["aideck_ip"],
         aideck_port=cfg["network"]["aideck_port"],
         local_port=cfg["network"]["local_port"],
-        start_magic=cfg["network"]["start_magic"].encode(),
-        width=cfg["video"]["width"],
-        height=cfg["video"]["height"],
-        min_jpeg_bytes=cfg["video"]["min_jpeg_bytes"],
     )
     link = CrazyflieLink(
         uri=cfg["crazyflie"]["uri"],

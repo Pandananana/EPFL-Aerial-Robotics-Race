@@ -1,19 +1,11 @@
-# Live-system config. Edit values here rather than in code.
-
 network:
   aideck_ip: "192.168.4.1"
   aideck_port: 5000
   local_port: 5001
-  start_magic: "FER" # encoded as bytes by the video stream
 
 crazyflie:
   uri: "radio://0/80/2M/E7E7E7E718"
   cache_dir: "cache"
-
-video:
-  width: 324
-  height: 244
-  min_jpeg_bytes: 5000
 
 control:
   speed_mps: 0.6
@@ -33,18 +25,5 @@ recording:
 webots:
   # Path to the Webots binary. On macOS this is inside the app bundle.
   binary: "/Applications/Webots.app/Contents/MacOS/webots"
-  # World file (relative to repo root) and the name of the Crazyflie robot in
-  # that world. The robot must have controller "<extern>" so Webots waits for
-  # this Python process to attach.
-  world: "sim/worlds/race.wbt"
-  robot_name: "crazyflie"
-  # The backend forwards the simulator's native BGR camera frames straight
-  # through — no grayscale conversion or resizing — and main.py forces the
-  # detector to "pink" so we use the colour signal. The sim doesn't try to
-  # emulate the real AI-deck's black-and-white output.
-  # Emission rates, matching the real Crazyflie: AI-deck streams JPEGs at
-  # ~3 fps, the log block sends pose at 100 Hz. The Webots loop still ticks
-  # every basicTimeStep (8 ms) so the PID stays stable; these only throttle
-  # what we forward into the Qt pipeline.
   camera_fps: 3.0
   pose_rate_hz: 100.0

@@ -19,6 +19,8 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
+WORLD = "sim/worlds/race.wbt"
+ROBOT_NAME = "crazyflie"
 
 
 def _find_webots_home(binary: Path) -> Path:
@@ -42,7 +44,7 @@ def _find_webots_home(binary: Path) -> Path:
 
 def launch_webots(cfg: dict) -> subprocess.Popen:
     webots = Path(os.environ.get("WEBOTS", cfg["binary"]))
-    world = REPO / cfg["world"]
+    world = REPO / WORLD
 
     if not webots.exists():
         raise SystemExit(
@@ -66,7 +68,7 @@ def launch_webots(cfg: dict) -> subprocess.Popen:
     # via WEBOTS_CONTROLLER_URL. Use a non-default port so a casually-running
     # Webots elsewhere on the machine doesn't collide.
     port = os.environ.get("WEBOTS_PORT", "1234")
-    os.environ["WEBOTS_CONTROLLER_URL"] = f"ipc://{port}/{cfg['robot_name']}"
+    os.environ["WEBOTS_CONTROLLER_URL"] = f"ipc://{port}/{ROBOT_NAME}"
 
     proc = subprocess.Popen([
         str(webots),

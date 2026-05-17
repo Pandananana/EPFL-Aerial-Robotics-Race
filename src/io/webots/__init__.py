@@ -15,7 +15,6 @@ from src.io.webots.launcher import launch_webots
 def build_webots(cfg: dict) -> WebotsBackend:
     launch_webots(cfg["webots"])
     return WebotsBackend(
-        robot_name=cfg["webots"]["robot_name"],
         camera_fps=cfg["webots"]["camera_fps"],
         pose_rate_hz=cfg["webots"]["pose_rate_hz"],
     )
