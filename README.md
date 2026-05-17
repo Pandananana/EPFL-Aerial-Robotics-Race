@@ -35,114 +35,22 @@ If your Homebrew installation is in a non-default location, you might need to li
 $ export DYLD_LIBRARY_PATH="YOUR_HOMEBREW_PATH/lib:$DYLD_LIBRARY_PATH"
 ```
 
-## Running Crazyflie Client
+## Labels and training data
 
-The GUI client can be run using
+Labels live under `data/labels/` and are tracked by `data/splits.json` (the source-of-truth manifest of which labeled frame is in which split). Two flavours, both derived from the same recordings:
 
-```bash
-uvx cfclient
-```
+- **Seg labels** — hand-traced labelme polygons of each gate's inner LED edge (the hole the drone flies through). Variable vertex count depending on how much of the gate is in-frame. Authored manually; see README for the labeling rulebook.
+- **Pose labels** — 4-corner (TL, TR, BR, BL) labels with per-corner visibility flags, generated from the seg polygons. For fully-visible gates the four polygon vertices are taken directly (v=2). For partially in-frame gates the converter either extrapolates the single missing corner from the two edges exiting the frame, or — when two or more corners are off-image — clips them to the image boundary and marks them v=0. Gates with too few interior vertices are skipped.
 
-## Verifying the connection
+The YOLO models train off whichever label flavour they need; a shared dataset builder materializes the on-disk YOLO layout from `splits.json`.
 
-A minimal script is provided to check that `cflib` can see and talk to the drone:
+### Hand traced labeling conventions
 
-```bash
-uv run python test_connection.py
-```
+Gate labels are labelme polygons traced on raw flight frames. Pose labels are derived from these polygons by a converter script.
 
-On success it prints the firmware revision and disconnects cleanly. If you see
-`Too many packets lost`, move the drone closer to the Crazyradio and retry.
-
-## Running the live system
-
-The integrated system (UDP video → recording, perception, planning, control)
-lives under `src/`. Edit `config/default.yaml` and `config/calibration.yaml`
-before flying.
-
-```bash
-uv run python scripts/live_viewer.py                                        # live stack: AI-deck + Crazyflie + FPV window
-uv run python scripts/live_viewer.py --source replay --recording data/recordings/<run>   # replay through perception + FPV window, no drone
-uv run python scripts/replay_log.py data/recordings/<run>                   # replay through perception, print only
-```
-
-The viewer is backend-agnostic — IO is wired through the `VideoSource` and
-`DroneLink` protocols in `src/io/sources.py`. In replay mode the controller
-and manual setpoints are dropped on the floor (no drone to command).
-
-## Running in Webots simulation
-
-For offline iteration without the radio + AI-deck, the same stack can attach
-to a Webots simulation as an extern controller. The simulated camera is
-converted to the AI-deck's 324×244 grayscale format on emission, so the
-perception models see identical input; the control surface is the cflib
-hover-setpoint `(vx, vy, yaw_rate, height)`, run through a cascaded PID
-inside the backend.
-
-Install [Webots](https://cyberbotics.com/) (R2023b or newer recommended) and
-edit `webots.binary` in `config/default.yaml` if it isn't at the default
-macOS path. Then:
-
-```bash
-uv run python scripts/sim_viewer.py
-```
-
-This launches Webots in the background (`--no-rendering --minimize --batch
---mode=realtime`) and runs the integrated stack with `--source webots`. The
-FPV window in this process is the only UI; close it to terminate the run
-(Webots is cleaned up on exit). Recordings land in `data/recordings/` just
-like live flights — useful for generating labeled frames against the sim
-gates.
-
-The world (`sim/worlds/race.wbt`) and the racing-gate proto
-(`sim/protos/RacingGate.proto`) are adapted from the EPFL aerial-robotics
-course. Edit the .wbt to relocate gates or extend the scene.
-
-Module layout:
-
-- `src/messages.py` — shared dataclasses (Frame, DronePose, GateDetection2D, Gate3D, Setpoint)
-- `src/bus.py` — `Latest[T]` latch for "most recent value" sharing (Qt signals handle events)
-- `src/io/` — backend protocols (`sources.py`), UDP video stream, Crazyflie radio link, disk recorder, recording replay
-- `src/perception/` — gate detector (wraps `src/perception/models/`), 3D pose estimator
-- `src/perception/models/` — detector backends + shared YOLO dataset builder + committed `best.pt` weights
-- `src/control/` — planner, controller (stubs), and keyboard manual override
-- `src/ui/` — FPV display window
-- `src/main.py` — orchestrator: instantiates modules and wires their signals/slots
-
-## Labeling workflow
-
-```bash
-uv run python tools/sample_to_label.py data/recordings/<run> --n 50
-uvx labelme to_label --output data/labels/seg/<run> --labels gate --nodata --autosave
-uv run python tools/finalize_no_gates.py data/recordings/<run>
-uv run python tools/build_splits.py
-```
-
-`sample_to_label.py` symlinks a random subset of _unlabeled_ PNGs into `to_label/` (gitignored). The labelme `--output` flag drops JSONs into the parallel `data/labels/seg/<run>/` tree, not next to the images. After the batch, `finalize_no_gates.py` writes empty-shape JSONs for any sampled image you skipped past. Finally rebuild the manifest.
-
-To pre-label new recordings with the current YOLO seg model (only writes sidecars for images that don't already have one), run:
-
-```bash
-uv run python tools/auto_label.py
-```
-
-## Training and evaluation
-
-Train a YOLO detector (rebuilds the YOLO-format dataset from `data/splits.json`, fine-tunes, copies `best.pt` next to the detector, then evaluates on the test split):
-
-```bash
-uv run python -m src.perception.models.yolo_seg.train
-uv run python -m src.perception.models.yolo_obb.train
-```
-
-Evaluate any detector on the test split:
-
-```bash
-uv run python test.py --model {hough,yolo_obb,yolo_seg} --iou 0.5
-```
-
-Step through predictions vs. ground truth visually:
-
-```bash
-uv run python tools/visualize_preds.py --model yolo_seg
-```
+- Each gate is an LED rectangle with equal height, but variable width and pose.
+- Trace the **inner edge** of the LED frame (the hole the drone flies through), not the outer bloom or the centerline.
+- Click order is clockwise starting from the upper-left corner.
+- If the whole gate hole is visible, the polygon has 4 points. If the gate is partially out of frame, point count varies (typically 3–6+); polygon vertices on the image boundary are treated as clip points, not real corners.
+- Skip a gate when it is near-edge-on, partially blocked from view, or any of its corners are off-image and the gate is also otherwise hard to interpret.
+- An image with no labelable gates is still saved with `{"shapes": []}` — this distinguishes "reviewed, empty" from "not yet reviewed".

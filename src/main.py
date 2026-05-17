@@ -185,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.source == "webots":
         backend = build_webots_backend(cfg)
         video, link = backend, backend
-        record = True
+        record = False
         # The Webots assignment world has emissive pink-panel gates; the
         # HSV-based pink detector is purpose-built for them and avoids the
         # domain gap that trips up the AI-deck-trained YOLO models.
