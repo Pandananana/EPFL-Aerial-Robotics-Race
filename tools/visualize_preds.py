@@ -4,11 +4,13 @@ detector's predictions (red). Space = next image, q / Esc = quit."""
 import argparse
 import importlib
 import json
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from test import MODEL_MODULES, load_gt_quads
 
 

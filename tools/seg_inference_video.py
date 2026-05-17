@@ -7,11 +7,13 @@ ordered by filename.
 """
 
 import argparse
+import sys
 from pathlib import Path
 
 import cv2
 import numpy as np
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from models.yolo_seg.detector import CONF_THRESHOLD, _load_model
 
 OUTLINE_BGR = (0, 0, 255)
