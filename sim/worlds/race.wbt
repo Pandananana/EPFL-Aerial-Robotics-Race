@@ -29,15 +29,15 @@ TexturedBackground {
 }
 Crazyflie {
   translation 1 4 0.115
-  rotation 0 0 1 1.5708
+  rotation 0 0 1 -1.5708
   name "crazyflie"
   controller "<extern>"
   extensionSlot [
     DEF CF_CAMERA Camera {
       name "cf_camera"
       fieldOfView 1.5
-      width 300
-      height 300
+      width 324
+      height 244
       near 0.2
     }
     DistanceSensor {
