@@ -1,0 +1,31 @@
+# Live-system config. Edit values here rather than in code.
+
+network:
+  aideck_ip: "192.168.4.1"
+  aideck_port: 5000
+  local_port: 5001
+  start_magic: "FER"  # encoded as bytes by the video stream
+
+crazyflie:
+  uri: "radio://0/80/2M/E7E7E7E718"
+  cache_dir: "cache"
+
+video:
+  width: 324
+  height: 244
+  min_jpeg_bytes: 5000
+
+control:
+  speed_mps: 0.6
+  yaw_rate_dps: 70.0
+  default_height_m: 0.3
+  setpoint_rate_hz: 10
+
+perception:
+  detector: "yolo_pose"          # one of: yolo_pose, yolo_seg, yolo_obb, hough
+  conf_threshold: 0.25
+  gate_height_m: 0.48            # inner LED frame height, metres
+  gate_width_search_m: [0.20, 1.21, 0.01]  # arange(start, stop, step)
+
+recording:
+  base_dir: "recordings"

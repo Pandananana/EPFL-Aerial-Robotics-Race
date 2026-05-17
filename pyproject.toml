@@ -9,5 +9,6 @@ dependencies = [
     "labelme>=6.2.0",
     "opencv-python>=4.13.0.92",
     "pyqt6>=6.11.0",
+    "pyyaml>=6.0",
     "ultralytics>=8.3.0",
 ]

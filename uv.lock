@@ -281,6 +281,7 @@ dependencies = [
     { name = "labelme" },
     { name = "opencv-python" },
     { name = "pyqt6" },
+    { name = "pyyaml" },
     { name = "ultralytics" },
 ]
 
@@ -290,6 +291,7 @@ requires-dist = [
     { name = "labelme", specifier = ">=6.2.0" },
     { name = "opencv-python", specifier = ">=4.13.0.92" },
     { name = "pyqt6", specifier = ">=6.11.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "ultralytics", specifier = ">=8.3.0" },
 ]
 

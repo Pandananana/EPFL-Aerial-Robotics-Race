@@ -1,0 +1,16 @@
+# AI-deck HM01B0 intrinsics, derived from the datasheet, no per-camera calibration.
+#
+# Sensor: 324x324, pixel size 3.6 um, H/V FOV 87 deg over the full active array.
+# We operate in 324x244 window mode (centred vertical crop).
+#
+#   fx = fy = (324 / 2) / tan(87/2 deg) ~= 170.7 px
+#   cx = 162, cy = 122
+#
+# Distortion is left at zero. The datasheet's 115 deg diagonal vs 87 deg H/V
+# implies real barrel distortion; expect ~tens of cm depth error for gates
+# near the image edges. Replace with calibrated K + dist for better accuracy.
+camera_matrix:
+  - [170.7, 0.0, 162.0]
+  - [0.0, 170.7, 122.0]
+  - [0.0, 0.0, 1.0]
+dist_coeffs: [0.0, 0.0, 0.0, 0.0, 0.0]

@@ -54,6 +54,26 @@ uv run python test_connection.py
 On success it prints the firmware revision and disconnects cleanly. If you see
 `Too many packets lost`, move the drone closer to the Crazyradio and retry.
 
+## Running the live system
+
+The integrated system (UDP video → recording, perception, planning, control)
+lives under `src/`. Edit `config/default.yaml` and `config/calibration.yaml`
+before flying.
+
+```bash
+uv run python scripts/live_viewer.py    # full live stack with FPV window
+uv run python scripts/replay_log.py recordings/<run>   # replay through perception, no drone
+```
+
+Module layout:
+
+- `src/messages.py` — shared dataclasses (Frame, DronePose, GateDetection2D, Gate3D, Setpoint)
+- `src/bus.py` — `Latest[T]` latch for "most recent value" sharing (Qt signals handle events)
+- `src/io/` — UDP video stream, Crazyflie radio link, disk recorder, recording replay
+- `src/perception/` — gate detector (wraps `models/`), 3D pose estimator
+- `src/planning/` — waypoint planner + controller (stubs; owned by the planning team)
+- `src/main.py` — orchestrator: instantiates modules and wires their signals/slots
+
 ## Labeling workflow
 
 ```bash
