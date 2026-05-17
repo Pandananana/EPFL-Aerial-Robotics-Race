@@ -1,18 +1,22 @@
-"""Maps the current Waypoint + DronePose to a Setpoint.
+"""Maps the current Waypoint + DronePose to a hover Setpoint.
 
-Setpoints follow the cflib send_hover_setpoint format:
+Setpoints follow the cflib `send_hover_setpoint` format:
   vx, vy   body-frame velocities (m/s)
   yaw_rate deg/s
   height   absolute z (m)
 
-The Crazyflie's hover commander already does altitude tracking from the
-`height` field and holds lateral position when vx=vy=0. That gives us a
-free, safe takeoff for the cost of emitting one Setpoint per waypoint:
-zero velocity, target height. World->body velocity control for lateral
-waypoint tracking will be added when RECON_LAP / RACE_LAP need it.
+For lateral tracking we run a plain P-loop on world-frame position error
+to produce a world-frame velocity, cap that magnitude at the waypoint's
+`max_speed_mps`, and rotate it into the body frame via the current yaw.
+Yaw is closed the same way: a P-loop on yaw error produces a yaw rate,
+capped at MAX_YAW_RATE_DPS. Altitude tracking stays where it was — set
+`height` from the waypoint and let the firmware (or the in-sim PID) close
+the z loop.
 """
 
 from __future__ import annotations
+
+import math
 
 from PyQt6 import QtCore
 
@@ -22,6 +26,10 @@ from src.messages import DronePose, Setpoint, Waypoint
 
 class Controller(QtCore.QObject):
     setpoint_ready = QtCore.pyqtSignal(object)  # Setpoint
+
+    XY_POS_GAIN_S_INV = 1.4         # world velocity (m/s) per metre of position error
+    YAW_RATE_GAIN_PER_S = 3.0       # yaw rate (deg/s) per degree of yaw error
+    MAX_YAW_RATE_DPS = 120.0
 
     def __init__(self, *, default_height_m: float, parent: QtCore.QObject | None = None):
         super().__init__(parent)
@@ -34,13 +42,40 @@ class Controller(QtCore.QObject):
 
     @QtCore.pyqtSlot(object)
     def on_waypoint(self, waypoint: Waypoint) -> None:
-        # Takeoff / hover: zero velocity, target height from the waypoint.
-        # Lateral position is held by the firmware. Needs Implementation:
-        # compute body-frame velocity from the world-frame position error
-        # for the racing phases.
+        pose = self._pose.get()
+        if pose is None:
+            # No pose yet — fall back to altitude hold so the firmware doesn't
+            # see an undefined setpoint while the link warms up.
+            self.setpoint_ready.emit(Setpoint(
+                vx=0.0, vy=0.0, yaw_rate=0.0, height=waypoint.z,
+            ))
+            return
+
+        # World-frame velocity from position error, capped at the waypoint speed.
+        dx = waypoint.x - pose.x
+        dy = waypoint.y - pose.y
+        vx_world = self.XY_POS_GAIN_S_INV * dx
+        vy_world = self.XY_POS_GAIN_S_INV * dy
+        speed = math.hypot(vx_world, vy_world)
+        if waypoint.max_speed_mps > 0.0 and speed > waypoint.max_speed_mps:
+            scale = waypoint.max_speed_mps / speed
+            vx_world *= scale
+            vy_world *= scale
+
+        # Rotate world velocity into the body frame using current yaw.
+        yaw_rad = math.radians(pose.yaw)
+        c, s = math.cos(yaw_rad), math.sin(yaw_rad)
+        vx_body = c * vx_world + s * vy_world
+        vy_body = -s * vx_world + c * vy_world
+
+        # Yaw error -> yaw rate (degrees throughout to match the hover surface).
+        yaw_err_deg = ((waypoint.yaw - pose.yaw + 180.0) % 360.0) - 180.0
+        yaw_rate = self.YAW_RATE_GAIN_PER_S * yaw_err_deg
+        yaw_rate = max(-self.MAX_YAW_RATE_DPS, min(self.MAX_YAW_RATE_DPS, yaw_rate))
+
         self.setpoint_ready.emit(Setpoint(
-            vx=0.0,
-            vy=0.0,
-            yaw_rate=0.0,
-            height=waypoint.z,
+            vx=float(vx_body),
+            vy=float(vy_body),
+            yaw_rate=float(yaw_rate),
+            height=float(waypoint.z),
         ))

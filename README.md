@@ -26,13 +26,21 @@ If you're using Python 3.13, you need to install [Visual Studio](https://visuals
 For Python 3.12+ on macOS, you need to install libusb using Homebrew:
 
 ```bash
-$ brew install libusb
+brew install libusb
 ```
 
 If your Homebrew installation is in a non-default location, you might need to link the libusb library:
 
 ```bash
-$ export DYLD_LIBRARY_PATH="YOUR_HOMEBREW_PATH/lib:$DYLD_LIBRARY_PATH"
+export DYLD_LIBRARY_PATH="YOUR_HOMEBREW_PATH/lib:$DYLD_LIBRARY_PATH"
+```
+
+## Starting Crazyflie client
+
+Make sure you have `uv` installed, then run
+
+```bash
+uvx cfclient
 ```
 
 ## Running the system

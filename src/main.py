@@ -178,6 +178,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.autostart:
         sys_["link"].connected.connect(lambda _s: sys_["planner"].start())
+    # Cut motors once the FSM reaches the terminal state — regardless of
+    # whether the mission was autostarted or kicked off manually later.
+    sys_["planner"].mission_done.connect(sys_["link"].send_stop)
 
     win = FpvWindow(sys_["manual"])
     sys_["video"].frame_ready.connect(win.on_frame)

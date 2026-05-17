@@ -1,154 +1,115 @@
-"""Mission state machine + gate selection.
+"""Mission FSM dispatcher.
 
-Runs the three-phase race plan:
+Owns the gate tracker and the FSM `Context`, forwards pose updates and
+gate detections to the current state, and swaps to whatever state the
+state returns. The states themselves live under `src/control/states/` so
+this file stays small — see `states/base.py` for the State contract.
 
-    IDLE -> TAKEOFF -> RECON_LAP -> RETURN_LAND -> RACE_LAP (x2) -> FINAL_LAND
+The mission today is:
 
-The FSM is ticked from `on_pose` (the pose stream is the fastest input we
-get, ~100 Hz on live, and is the right cadence for closed-loop decisions).
-Every tick emits a `Waypoint` for the controller to track, except in IDLE
-where the planner stays silent so manual control can still drive the link.
+    TAKEOFF -> N x (SEARCH -> APPROACH -> MEASURE -> PASS_THROUGH)
+            -> RETURN_HOME -> LAND -> DONE
 
-Gate inputs (`on_gate`) feed a world-frame gate map built up during recon
-and reused as a prior during race laps. Only the TAKEOFF phase is wired
-up right now; the rest of the FSM is stubbed (it holds the takeoff
-waypoint) and the gate map is unused.
+Racing isn't implemented yet; it will slot in between the final
+pass-through and the return-home transition.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from enum import Enum, auto
+import logging
+import math
 
 from PyQt6 import QtCore
 
 from src.bus import Latest
-from src.messages import DronePose, Gate3D, Waypoint
+from src.control.states.base import Context, State
+from src.control.states.gate_tracker import GateTracker
+from src.control.states.takeoff import TakeoffState
+from src.messages import DronePose, Gate3D
 
-
-class Phase(Enum):
-    IDLE = auto()
-    TAKEOFF = auto()
-    RECON_LAP = auto()      # Needs Implementation
-    RETURN_LAND = auto()    # Needs Implementation
-    RACE_LAP = auto()       # Needs Implementation
-    FINAL_LAND = auto()     # Needs Implementation
-
-
-@dataclass
-class GateEstimate:
-    """World-frame gate pose, accumulated across observations."""
-    x: float
-    y: float
-    z: float
-    yaw: float
-    n_observations: int
+logger = logging.getLogger(__name__)
 
 
 class Planner(QtCore.QObject):
-    waypoint_ready = QtCore.pyqtSignal(object)  # Waypoint
-    phase_changed = QtCore.pyqtSignal(object)   # Phase
+    waypoint_ready = QtCore.pyqtSignal(object)   # Waypoint
+    mission_done = QtCore.pyqtSignal()           # fires once after landing
+    state_changed = QtCore.pyqtSignal(str)       # state class name
 
-    # Takeoff is "complete" once z is within this band of the target height
-    # for SETTLE_TIME_S consecutive seconds.
-    TAKEOFF_SETTLE_TOLERANCE_M = 0.05
-    TAKEOFF_SETTLE_TIME_S = 1.0
-    # We're not moving laterally during takeoff, so this is just a label.
-    TAKEOFF_SPEED_MPS = 0.0
+    DEFAULT_GATE_COUNT = 5
 
     def __init__(
         self,
         *,
         default_height_m: float,
+        n_gates: int = DEFAULT_GATE_COUNT,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
-        self._gate: Latest[Gate3D] = Latest()
         self._pose: Latest[DronePose] = Latest()
+        self._takeoff_height_m = default_height_m
+        self._n_gates = n_gates
 
-        self._target_height = default_height_m
-        self._phase: Phase = Phase.IDLE
-
-        # Captured on the first pose after start() — anchors takeoff and
-        # is the "return to start" target for RETURN_LAND.
+        self._state: State | None = None
+        self._tracker = GateTracker()
+        self._gates_done = 0
         self._start_x: float | None = None
         self._start_y: float | None = None
-        self._start_yaw: float | None = None
-
-        # When z first entered the takeoff settle band on the current ascent.
-        self._takeoff_settled_at: float | None = None
-
-        # Hold target — the last waypoint we emitted. Stubbed phases keep
-        # emitting this so the drone hovers safely while we work on them.
-        self._hold: Waypoint | None = None
-
-        # World-frame gate map built during RECON_LAP, used as prior during
-        # RACE_LAP. Keys are stable gate indices assigned by nearest-neighbor
-        # association. Unused until RECON_LAP is implemented.
-        self._gate_map: dict[int, GateEstimate] = {}
-        self._visit_order: list[int] = []
-        self._race_lap_count: int = 0
+        self._start_yaw_rad: float | None = None
 
     @QtCore.pyqtSlot()
     def start(self) -> None:
-        """Kick off the mission. The drone must be on the ground and armed.
-
-        Idempotent — calling twice while already running is a no-op.
-        """
-        if self._phase is not Phase.IDLE:
+        """Kick off the mission. Idempotent while already running."""
+        if self._state is not None:
             return
-        self._start_x = None  # captured on first pose after this
+        self._tracker.reset()
+        self._gates_done = 0
+        self._start_x = None
         self._start_y = None
-        self._start_yaw = None
-        self._takeoff_settled_at = None
-        self._set_phase(Phase.TAKEOFF)
-
-    @QtCore.pyqtSlot(object)
-    def on_gate(self, gate: Gate3D) -> None:
-        self._gate.set(gate)
-        # TODO: in RECON_LAP, transform corners to world frame using the
-        # matched pose and update self._gate_map via nearest-neighbor.
+        self._start_yaw_rad = None
+        self._state = TakeoffState()
+        logger.info("Mission start (target %d gates)", self._n_gates)
+        self.state_changed.emit(type(self._state).__name__)
 
     @QtCore.pyqtSlot(object)
     def on_pose(self, pose: DronePose) -> None:
         self._pose.set(pose)
-        if self._phase is Phase.IDLE:
+        if self._state is None:
             return
-        if self._phase is Phase.TAKEOFF:
-            self._tick_takeoff(pose)
-        else:
-            # Stubbed phases: hold the last waypoint so the drone hovers
-            # in place instead of crashing into NotImplementedError.
-            if self._hold is not None:
-                self.waypoint_ready.emit(self._hold)
-
-    def _tick_takeoff(self, pose: DronePose) -> None:
         if self._start_x is None:
             self._start_x = pose.x
             self._start_y = pose.y
-            self._start_yaw = pose.yaw
+            self._start_yaw_rad = math.radians(pose.yaw)
 
-        wp = Waypoint(
-            timestamp=pose.timestamp,
-            x=self._start_x,
-            y=self._start_y,
-            z=self._target_height,
-            yaw=self._start_yaw or 0.0,
-            max_speed_mps=self.TAKEOFF_SPEED_MPS,
-        )
-        self._hold = wp
-        self.waypoint_ready.emit(wp)
+        ctx = self._make_context(pose)
+        next_state = self._state.tick(ctx)
+        # `gates_done` is a plain int on the context; states bump it but the
+        # planner owns the source of truth, so pull it back every tick.
+        self._gates_done = ctx.gates_done
+        if next_state is not None:
+            self._state = next_state
+            self.state_changed.emit(type(self._state).__name__)
 
-        if abs(pose.z - self._target_height) <= self.TAKEOFF_SETTLE_TOLERANCE_M:
-            if self._takeoff_settled_at is None:
-                self._takeoff_settled_at = pose.timestamp
-            elif pose.timestamp - self._takeoff_settled_at >= self.TAKEOFF_SETTLE_TIME_S:
-                self._set_phase(Phase.RECON_LAP)
-        else:
-            self._takeoff_settled_at = None
-
-    def _set_phase(self, phase: Phase) -> None:
-        if phase is self._phase:
+    @QtCore.pyqtSlot(object)
+    def on_gate(self, gate: Gate3D) -> None:
+        pose = self._pose.get()
+        if self._state is None or pose is None:
             return
-        self._phase = phase
-        self.phase_changed.emit(phase)
+        ctx = self._make_context(pose)
+        self._state.on_gate(ctx, gate)
+
+    def _make_context(self, pose: DronePose) -> Context:
+        return Context(
+            pose=pose,
+            start_x=float(self._start_x if self._start_x is not None else pose.x),
+            start_y=float(self._start_y if self._start_y is not None else pose.y),
+            start_yaw_rad=float(
+                self._start_yaw_rad if self._start_yaw_rad is not None
+                else math.radians(pose.yaw)
+            ),
+            tracker=self._tracker,
+            gates_done=self._gates_done,
+            n_gates=self._n_gates,
+            takeoff_height_m=self._takeoff_height_m,
+            emit_waypoint=self.waypoint_ready.emit,
+            notify_mission_done=self.mission_done.emit,
+        )
