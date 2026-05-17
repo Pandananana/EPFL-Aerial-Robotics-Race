@@ -68,8 +68,35 @@ uv run python scripts/replay_log.py data/recordings/<run>                   # re
 
 The viewer is backend-agnostic — IO is wired through the `VideoSource` and
 `DroneLink` protocols in `src/io/sources.py`. In replay mode the controller
-and manual setpoints are dropped on the floor (no drone to command); add a
-Webots backend there when sim integration lands.
+and manual setpoints are dropped on the floor (no drone to command).
+
+## Running in Webots simulation
+
+For offline iteration without the radio + AI-deck, the same stack can attach
+to a Webots simulation as an extern controller. The simulated camera is
+converted to the AI-deck's 324×244 grayscale format on emission, so the
+perception models see identical input; the control surface is the cflib
+hover-setpoint `(vx, vy, yaw_rate, height)`, run through a cascaded PID
+inside the backend.
+
+Install [Webots](https://cyberbotics.com/) (R2023b or newer recommended) and
+edit `webots.binary` in `config/default.yaml` if it isn't at the default
+macOS path. Then:
+
+```bash
+uv run python scripts/sim_viewer.py
+```
+
+This launches Webots in the background (`--no-rendering --minimize --batch
+--mode=realtime`) and runs the integrated stack with `--source webots`. The
+FPV window in this process is the only UI; close it to terminate the run
+(Webots is cleaned up on exit). Recordings land in `data/recordings/` just
+like live flights — useful for generating labeled frames against the sim
+gates.
+
+The world (`sim/worlds/race.wbt`) and the racing-gate proto
+(`sim/protos/RacingGate.proto`) are adapted from the EPFL aerial-robotics
+course. Edit the .wbt to relocate gates or extend the scene.
 
 Module layout:
 

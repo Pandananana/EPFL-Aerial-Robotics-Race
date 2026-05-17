@@ -50,6 +50,7 @@ from src.io.recorder import Recorder
 from src.io.replay import ReplayThread
 from src.io.sources import DroneLink, VideoSource
 from src.io.video_stream import UdpVideoThread
+from src.io.webots_backend import WebotsBackend
 from src.perception.gate_detector import GateDetector
 from src.perception.pose_estimator import PoseEstimator
 from src.ui.fpv_window import FpvWindow
@@ -86,6 +87,15 @@ def build_live_backends(cfg: dict) -> tuple[VideoSource, DroneLink]:
 def build_replay_backend(recording: Path, speed: float) -> ReplayThread:
     """Single ReplayThread serves as both VideoSource and DroneLink."""
     return ReplayThread(recording, speed=speed)
+
+
+def build_webots_backend(cfg: dict) -> WebotsBackend:
+    """Single WebotsBackend serves as both VideoSource and DroneLink."""
+    return WebotsBackend(
+        robot_name=cfg["webots"]["robot_name"],
+        out_width=cfg["video"]["width"],
+        out_height=cfg["video"]["height"],
+    )
 
 
 def build_system(
@@ -149,9 +159,10 @@ def build_system(
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Run the integrated drone-race system.")
     ap.add_argument(
-        "--source", choices=["live", "replay"], default="live",
+        "--source", choices=["live", "replay", "webots"], default="live",
         help="IO backend: 'live' connects to the AI-deck and Crazyflie; "
-             "'replay' plays back a recording (controller setpoints are dropped).",
+             "'replay' plays back a recording (controller setpoints are dropped); "
+             "'webots' attaches to a running Webots simulation as an extern controller.",
     )
     ap.add_argument(
         "--recording", type=Path, default=None,
@@ -171,6 +182,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.source == "live":
         video, link = build_live_backends(cfg)
+        record = True
+    elif args.source == "webots":
+        backend = build_webots_backend(cfg)
+        video, link = backend, backend
         record = True
     else:
         if args.recording is None:

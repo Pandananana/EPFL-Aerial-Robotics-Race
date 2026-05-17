@@ -29,3 +29,17 @@ perception:
 
 recording:
   base_dir: "data/recordings"
+
+webots:
+  # Path to the Webots binary. On macOS this is inside the app bundle.
+  binary: "/Applications/Webots.app/Contents/MacOS/webots"
+  # World file (relative to repo root) and the name of the Crazyflie robot in
+  # that world. The robot must have controller "<extern>" so Webots waits for
+  # this Python process to attach.
+  world: "sim/worlds/race.wbt"
+  robot_name: "crazyflie"
+  # Webots' simulated camera resolution. The backend converts BGRA -> grayscale
+  # and resizes to video.width x video.height so the perception pipeline sees
+  # the same shape as the real AI-deck stream.
+  sim_camera_width: 300
+  sim_camera_height: 300

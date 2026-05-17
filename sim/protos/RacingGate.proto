@@ -1,0 +1,126 @@
+#VRML_SIM R2023b utf8
+
+# Pink-LED racing gate. Adapted from the EPFL aerial-robotics course
+# (RacingGate.proto). The drone flies through the opening between the
+# top/bottom and left/right beams; the inner Box is an emissive pink panel
+# used by the assignment for goal detection.
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/appearances/protos/RoughPine.proto"
+
+
+PROTO RacingGate [
+  field SFString name "racing gate"
+  field SFVec3f translation 0 2 1
+  field SFRotation rotation 0 0 1 0
+  field SFFloat goalVisible 0.2
+  field SFVec3f goalSize 0.4 0.1 0.4
+  field SFVec3f topBeamTranslation 0 0 0.23
+  field SFVec3f topBeamScale 0.4 0.06 0.04
+  field SFVec3f bottomBeamTranslation 0 0 -0.23
+  field SFVec3f bottomBeamScale 0.4 0.06 0.04
+  field SFVec3f leftBeamTranslation 0 0.21 -0.5
+  field SFVec3f leftBeamScale 1.0 0.06 0.04
+  field SFVec3f rightBeamTranslation 0 -0.21 -0.5
+  field SFVec3f rightBeamScale 1.0 0.06 0.04
+  field SFVec3f leftLegTranslation 0 0.21 -1.0
+  field SFVec3f rightLegTranslation 0 -0.21 -1.0
+]
+{
+    Solid {
+        name IS name
+        translation IS translation
+        rotation IS rotation
+        children [
+            Pose {
+                translation 0 0 0
+                children [
+                    Shape {
+                        appearance PBRAppearance {
+                            emissiveColor 1 0 1
+                            transparency IS goalVisible
+                        }
+                        geometry Box {
+                            size IS goalSize
+                        }
+                    }
+                ]
+            }
+            Pose {
+                translation IS leftLegTranslation
+                children [
+                    Shape {
+                        appearance RoughPine {
+                        }
+                        geometry Box {
+                            size 1.0 0.06 0.04
+                        }
+                    }
+                ]
+            }
+            Pose {
+                translation IS rightLegTranslation
+                children [
+                    Shape {
+                        appearance RoughPine {
+                        }
+                        geometry Box {
+                            size 1.0 0.06 0.04
+                        }
+                    }
+                ]
+            }
+            Pose {
+                translation IS leftBeamTranslation
+                rotation 0 1 0 1.5708
+                children [
+                    Shape {
+                        appearance RoughPine {
+                        }
+                        geometry Box {
+                            size IS leftBeamScale
+                        }
+                    }
+                ]
+            }
+            Pose {
+                translation IS rightBeamTranslation
+                rotation 0 1 0 1.5708
+                children [
+                    Shape {
+                        appearance RoughPine {
+                        }
+                        geometry Box {
+                            size IS rightBeamScale
+                        }
+                    }
+                ]
+            }
+            Pose {
+                translation IS topBeamTranslation
+                rotation 0.57735 0.57735 0.57735 2.0944
+                children [
+                    Shape {
+                        appearance RoughPine {
+                        }
+                        geometry Box {
+                            size IS topBeamScale
+                        }
+                    }
+                ]
+            }
+            Pose {
+                translation IS bottomBeamTranslation
+                rotation 0.57735 0.57735 0.57735 2.0944
+                children [
+                    Shape {
+                        appearance RoughPine {
+                        }
+                        geometry Box {
+                            size IS bottomBeamScale
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

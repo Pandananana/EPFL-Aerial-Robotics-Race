@@ -14,8 +14,11 @@ Implementations:
              send_stop are no-ops because there is no drone to command —
              setpoints from the controller / manual control are dropped
              on the floor.
-- `webots` : (planned) a Webots-backed object that exposes a sim camera
-             as the video source and pose+setpoint sink as the link.
+- `webots` : a single WebotsBackend serves both roles. Attaches to a running
+             Webots simulation as an extern controller, reads the simulated
+             camera + sensors, runs an in-process PID on incoming hover
+             Setpoints, and drives the rotor motors. See src/io/webots_backend.py
+             and scripts/sim_viewer.py.
 
 Backends are duck-typed; anything with the right Qt signals and methods
 works. These classes exist as documentation and for static type checkers.
