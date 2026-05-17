@@ -17,3 +17,4 @@ models/yolo_obb/data
 models/yolo_obb/runs
 models/yolo_seg/runs
 *.pt
+videos
