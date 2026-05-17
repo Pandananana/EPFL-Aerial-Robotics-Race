@@ -64,3 +64,30 @@ uv run python tools/build_splits.py
 ```
 
 `sample_to_label.py` symlinks a random subset of _unlabeled_ PNGs into `to_label/` (gitignored). `--output` makes labelme write the JSONs back next to the originals. After the batch, `finalize_no_gates.py` writes empty-shape JSONs for any sampled image you skipped past. Finally rebuild the manifest.
+
+To pre-label new recordings with the current YOLO seg model (only writes sidecars for images that don't already have one), run:
+
+```bash
+uv run python tools/auto_label.py
+```
+
+## Training and evaluation
+
+Train a YOLO detector (rebuilds the YOLO-format dataset from `dataset/splits.json`, fine-tunes, copies `best.pt` next to the detector, then evaluates on the test split):
+
+```bash
+uv run python -m models.yolo_seg.train
+uv run python -m models.yolo_obb.train
+```
+
+Evaluate any detector on the test split:
+
+```bash
+uv run python test.py --model {hough,yolo_obb,yolo_seg} --iou 0.5
+```
+
+Step through predictions vs. ground truth visually:
+
+```bash
+uv run python tools/visualize_preds.py --model yolo_seg
+```
