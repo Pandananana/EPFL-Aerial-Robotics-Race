@@ -16,7 +16,7 @@ Per-tick (`basicTimeStep`, 8 ms = 125 Hz in the bundled world):
     colour signal.
   * If a hover Setpoint has been pushed (vx, vy, yaw_rate, height — the
     cflib hover-commander surface), run the cascaded controller in
-    `_webots_pid` to get motor PWMs and apply them. Without a setpoint or
+    `pid.py` to get motor PWMs and apply them. Without a setpoint or
     after `send_stop`, motors are held at zero (drone sits on its pad).
 
 The emission rates match the real Crazyflie (AI-deck JPEG stream ~3 fps,
@@ -34,7 +34,7 @@ import numpy as np
 from PyQt6 import QtCore
 
 from src.bus import Latest
-from src.io._webots_pid import HoverController, _Sensors
+from src.io.webots.pid import HoverController, _Sensors
 from src.messages import DronePose, Frame, Setpoint
 
 

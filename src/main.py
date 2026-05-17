@@ -1,8 +1,12 @@
-"""Live entry point: instantiate modules, wire them via Qt signals, and run.
+"""Entry point: instantiate modules, wire them via Qt signals, and run.
 
-The IO backends are pluggable — see src/io/sources.py for the VideoSource
-and DroneLink protocols. `build_system` takes them as arguments; `main`
-picks one based on the --source flag.
+    uv run python -m src.main --source live
+    uv run python -m src.main --source webots
+    uv run python -m src.main --source replay --recording data/recordings/<id>
+
+Each backend lives under src/io/<mode>/ and exposes a `build_<mode>(cfg)`
+helper that returns objects satisfying the VideoSource and DroneLink
+protocols in src/io/sources.py. `main` picks one based on --source.
 
 Topology (signal -> slot):
 
@@ -45,12 +49,11 @@ from PyQt6 import QtWidgets
 from src.control.controller import Controller
 from src.control.manual import ManualControl
 from src.control.planner import Planner
-from src.io.crazyflie_link import CrazyflieLink
+from src.io.live import build_live
 from src.io.recorder import Recorder
-from src.io.replay import ReplayThread
+from src.io.replay import build_replay
 from src.io.sources import DroneLink, VideoSource
-from src.io.video_stream import UdpVideoThread
-from src.io.webots_backend import WebotsBackend
+from src.io.webots import build_webots
 from src.perception.gate_detector import GateDetector
 from src.perception.pose_estimator import PoseEstimator
 from src.ui.fpv_window import FpvWindow
@@ -63,38 +66,6 @@ def load_config(config_dir: Path | None = None) -> tuple[dict, dict]:
     cfg = yaml.safe_load((config_dir / "default.yaml").read_text())
     cal = yaml.safe_load((config_dir / "calibration.yaml").read_text())
     return cfg, cal
-
-
-def build_live_backends(cfg: dict) -> tuple[VideoSource, DroneLink]:
-    video = UdpVideoThread(
-        aideck_ip=cfg["network"]["aideck_ip"],
-        aideck_port=cfg["network"]["aideck_port"],
-        local_port=cfg["network"]["local_port"],
-        start_magic=cfg["network"]["start_magic"].encode(),
-        width=cfg["video"]["width"],
-        height=cfg["video"]["height"],
-        min_jpeg_bytes=cfg["video"]["min_jpeg_bytes"],
-    )
-    link = CrazyflieLink(
-        uri=cfg["crazyflie"]["uri"],
-        cache_dir=cfg["crazyflie"]["cache_dir"],
-        setpoint_rate_hz=cfg["control"]["setpoint_rate_hz"],
-    )
-    return video, link
-
-
-def build_replay_backend(recording: Path, speed: float) -> ReplayThread:
-    """Single ReplayThread serves as both VideoSource and DroneLink."""
-    return ReplayThread(recording, speed=speed)
-
-
-def build_webots_backend(cfg: dict) -> WebotsBackend:
-    """Single WebotsBackend serves as both VideoSource and DroneLink."""
-    return WebotsBackend(
-        robot_name=cfg["webots"]["robot_name"],
-        camera_fps=cfg["webots"]["camera_fps"],
-        pose_rate_hz=cfg["webots"]["pose_rate_hz"],
-    )
 
 
 def build_system(
@@ -186,10 +157,10 @@ def main(argv: list[str] | None = None) -> int:
     app = QtWidgets.QApplication(sys.argv[:1])
 
     if args.source == "live":
-        video, link = build_live_backends(cfg)
+        video, link = build_live(cfg)
         record = True
     elif args.source == "webots":
-        backend = build_webots_backend(cfg)
+        backend = build_webots(cfg)
         video, link = backend, backend
         record = False
         # The Webots assignment world has emissive pink-panel gates; the
@@ -199,7 +170,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         if args.recording is None:
             raise SystemExit("--source replay requires --recording <dir>")
-        replay = build_replay_backend(args.recording, args.speed)
+        replay = build_replay(args.recording, args.speed)
         video, link = replay, replay
         record = False
 

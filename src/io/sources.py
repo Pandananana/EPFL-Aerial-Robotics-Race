@@ -7,18 +7,18 @@ The integrated system in src/main.py is driven by two backends:
   `set_setpoint` / `send_stop`, and fires `connected` once when the link
   is ready so the UI can update its status.
 
-Implementations:
+Implementations live under src/io/<mode>/ and expose a `build_<mode>(cfg)`
+helper that src/main.py calls based on the --source flag:
 
 - `live`   : UdpVideoThread (video) + CrazyflieLink (link). Real hardware.
 - `replay` : a single ReplayThread serves both roles; set_setpoint and
              send_stop are no-ops because there is no drone to command —
              setpoints from the controller / manual control are dropped
              on the floor.
-- `webots` : a single WebotsBackend serves both roles. Attaches to a running
-             Webots simulation as an extern controller, reads the simulated
-             camera + sensors, runs an in-process PID on incoming hover
-             Setpoints, and drives the rotor motors. See src/io/webots_backend.py
-             and scripts/sim_viewer.py.
+- `webots` : `build_webots` launches Webots headless via the launcher,
+             then constructs WebotsBackend which serves both roles.
+             Reads the simulated camera + sensors and runs an in-process
+             PID on incoming hover Setpoints to drive the rotor motors.
 
 Backends are duck-typed; anything with the right Qt signals and methods
 works. These classes exist as documentation and for static type checkers.

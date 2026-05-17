@@ -35,6 +35,24 @@ If your Homebrew installation is in a non-default location, you might need to li
 $ export DYLD_LIBRARY_PATH="YOUR_HOMEBREW_PATH/lib:$DYLD_LIBRARY_PATH"
 ```
 
+## Running the system
+
+One entry point, three IO backends — chosen by `--source`:
+
+```bash
+make live                                # AI-deck + Crazyflie over radio
+make webots                              # headless Webots sim (--autostart)
+make replay REC=data/recordings/<id>     # play back a recording, perception only
+```
+
+Equivalent without `make`:
+
+```bash
+uv run python -m src.main --source live
+uv run python -m src.main --source webots --autostart
+uv run python -m src.main --source replay --recording data/recordings/<id> [--speed 1.0]
+```
+
 ## Labels and training data
 
 Labels live under `data/labels/` and are tracked by `data/splits.json` (the source-of-truth manifest of which labeled frame is in which split). Two flavours, both derived from the same recordings:
