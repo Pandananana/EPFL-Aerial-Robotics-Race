@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-16T14:50:52.236131+00:00",
+  "generated_at": "2026-05-17T16:44:07.270776+00:00",
   "policy": {
     "20260513_112205": "test",
     "20260513_112256": "train",
@@ -12,11 +12,11 @@
     },
     "gates_per_split": {
       "test": 37,
-      "train": 1371
+      "train": 1370
     },
     "empty_images_per_split": {
       "test": 20,
-      "train": 56
+      "train": 57
     },
     "images_per_run": {
       "20260513_112205": 41,
@@ -473,7 +473,7 @@
       "run": "20260513_112256",
       "frame": 9,
       "split": "train",
-      "n_gates": 1
+      "n_gates": 0
     },
     {
       "id": "20260513_112256_000010",
