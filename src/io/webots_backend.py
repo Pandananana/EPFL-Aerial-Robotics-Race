@@ -7,19 +7,20 @@ Webots waits for this Python process to attach.
 
 Per-tick (`basicTimeStep`, 8 ms = 125 Hz in the bundled world):
 
-  * Read GPS + IMU + gyro -> emit DronePose (rpy in degrees, like the real
-    Crazyflie log stream).
+  * Read GPS + IMU + gyro. Emit DronePose throttled to `pose_rate_hz`
+    (rpy in degrees, like the real Crazyflie log stream).
   * Read the simulated camera (BGRA at sim_camera_width x sim_camera_height),
     convert to grayscale and resize to video.width x video.height so it
-    matches the AI-deck format -> emit Frame.
+    matches the AI-deck format. Emit Frame throttled to `camera_fps`.
   * If a hover Setpoint has been pushed (vx, vy, yaw_rate, height — the
     cflib hover-commander surface), run the cascaded controller in
     `_webots_pid` to get motor PWMs and apply them. Without a setpoint or
     after `send_stop`, motors are held at zero (drone sits on its pad).
 
-The Webots `controller` Python module is only importable if `WEBOTS_HOME` is
-set and the platform-specific library path includes Webots' lib/controller.
-`scripts/sim_viewer.py` handles that before importing this module.
+The emission rates match the real Crazyflie (AI-deck JPEG stream ~3 fps,
+log block 100 Hz). The PID still runs every tick so attitude control stays
+stable; only what is forwarded into the Qt pipeline is throttled. Emitting
+at the full 125 Hz floods the YOLO detector and hangs the sim.
 """
 
 from __future__ import annotations
@@ -46,12 +47,16 @@ class WebotsBackend(QtCore.QThread):
         robot_name: str,
         out_width: int,
         out_height: int,
+        camera_fps: float,
+        pose_rate_hz: float,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._robot_name = robot_name
         self._out_width = out_width
         self._out_height = out_height
+        self._camera_period = 1.0 / camera_fps
+        self._pose_period = 1.0 / pose_rate_hz
         self._setpoint: Latest[Setpoint] = Latest()
         self._stopped = False
         self._seq = 0
@@ -85,8 +90,11 @@ class WebotsBackend(QtCore.QThread):
         timestep = int(robot.getBasicTimeStep())
         dt = timestep / 1000.0
 
+        # Camera sampling period is rounded up to a multiple of timestep so
+        # Webots doesn't re-render in between ticks we'll forward anyway.
+        camera_period_ms = max(timestep, int(round(self._camera_period * 1000.0)))
         camera = robot.getDevice("cf_camera")
-        camera.enable(timestep)
+        camera.enable(camera_period_ms)
         gps = robot.getDevice("gps")
         gps.enable(timestep)
         imu = robot.getDevice("inertial unit")
@@ -108,6 +116,8 @@ class WebotsBackend(QtCore.QThread):
         self.connected.emit(f"webots:{self._robot_name}")
 
         controller = HoverController()
+        next_pose_t = 0.0
+        next_frame_t = 0.0
 
         while not self.isInterruptionRequested():
             if robot.step(timestep) == -1:
@@ -120,16 +130,23 @@ class WebotsBackend(QtCore.QThread):
             quat = imu.getQuaternion()
             rates = gyro.getValues()
 
+            # Use sim time to throttle emissions; the loop still ticks at
+            # `timestep` so the PID below runs every iteration.
+            sim_t = robot.getTime()
             now = time.time()
-            self.pose_ready.emit(DronePose(
-                timestamp=now,
-                x=float(xyz[0]), y=float(xyz[1]), z=float(xyz[2]),
-                roll=float(np.degrees(rpy[0])),
-                pitch=float(np.degrees(rpy[1])),
-                yaw=float(np.degrees(rpy[2])),
-            ))
+            if sim_t >= next_pose_t:
+                self.pose_ready.emit(DronePose(
+                    timestamp=now,
+                    x=float(xyz[0]), y=float(xyz[1]), z=float(xyz[2]),
+                    roll=float(np.degrees(rpy[0])),
+                    pitch=float(np.degrees(rpy[1])),
+                    yaw=float(np.degrees(rpy[2])),
+                ))
+                next_pose_t = sim_t + self._pose_period
 
-            self._emit_frame(camera, now)
+            if sim_t >= next_frame_t:
+                self._emit_frame(camera, now)
+                next_frame_t = sim_t + self._camera_period
 
             sp = None if self._stopped else self._setpoint.get()
             if sp is None:

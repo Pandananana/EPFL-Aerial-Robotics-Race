@@ -55,7 +55,6 @@ from src.perception.gate_detector import GateDetector
 from src.perception.pose_estimator import PoseEstimator
 from src.ui.fpv_window import FpvWindow
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -95,6 +94,8 @@ def build_webots_backend(cfg: dict) -> WebotsBackend:
         robot_name=cfg["webots"]["robot_name"],
         out_width=cfg["video"]["width"],
         out_height=cfg["video"]["height"],
+        camera_fps=cfg["webots"]["camera_fps"],
+        pose_rate_hz=cfg["webots"]["pose_rate_hz"],
     )
 
 
