@@ -55,8 +55,11 @@ def train(
         label_smoothing=0.05,
         weight_decay=0.0005,
         single_cls=True,
-        # Shape / framing
+        # Shape / framing: rect=True groups batches by aspect ratio so 324x244
+        # frames train without square-letterbox padding. Ultralytics treats
+        # rect and mosaic as mutually exclusive, so mosaic is forced to 0.
         rect=True,
+        mosaic=0.0,
         close_mosaic=0,
         # Grayscale frames: hue/saturation jitter is wasted; keep value jitter.
         hsv_h=0.0,
@@ -64,6 +67,8 @@ def train(
         hsv_v=0.4,
         bgr=0.0,
         # Drone rolls/pitches in flight but the camera is never inverted.
+        # fliplr is safe because dataset_pose.yaml sets flip_idx=[1,0,3,2],
+        # which swaps TL<->TR and BR<->BL on horizontal flip.
         degrees=20.0,
         translate=0.1,
         scale=0.5,
@@ -71,8 +76,8 @@ def train(
         perspective=0.0005,
         flipud=0.0,
         fliplr=0.5,
-        # Mosaic shuffles keypoint identity across pasted gates; keep mild.
-        mosaic=0.2,
+        # mixup/copy_paste would scramble per-object keypoint identity.
+        # erasing can occlude keypoints that the loss still supervises.
         mixup=0.0,
         copy_paste=0.0,
         erasing=0.0,
