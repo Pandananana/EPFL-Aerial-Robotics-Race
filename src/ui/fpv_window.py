@@ -1,23 +1,30 @@
 """Live FPV display window.
 
-Subscribes to Frame, renders the grayscale image, shows a connection
-status line. Keyboard events are forwarded to a ManualControl instance —
-the window itself does no control logic.
+Subscribes to Frame, renders the grayscale image with the latest detected
+gate corners overlaid (green polylines), and shows a connection status
+line. Keyboard events are forwarded to a ManualControl instance — the
+window itself does no control logic.
 """
 
 from __future__ import annotations
 
+import cv2
+import numpy as np
 from PyQt6 import QtCore, QtGui, QtWidgets
 
 from src.control.manual import ManualControl
-from src.messages import Frame
+from src.messages import Frame, GateDetection2D
 
 
 class FpvWindow(QtWidgets.QWidget):
+    SCALE = 2
+
     def __init__(self, manual: ManualControl, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
         self.setWindowTitle("Crazyflie FPV")
         self._manual = manual
+        self._latest_det: GateDetection2D | None = None
+        self._rgb_buf: np.ndarray | None = None
 
         self.image_label = QtWidgets.QLabel("Waiting for video...")
         self.status_label = QtWidgets.QLabel("Initialising...")
@@ -30,11 +37,29 @@ class FpvWindow(QtWidgets.QWidget):
         self.status_label.setText(text)
 
     @QtCore.pyqtSlot(object)
+    def on_detection(self, det: GateDetection2D) -> None:
+        self._latest_det = det
+
+    @QtCore.pyqtSlot(object)
     def on_frame(self, frame: Frame) -> None:
         img = frame.image
         h, w = img.shape[:2]
-        qimg = QtGui.QImage(img.data, w, h, w, QtGui.QImage.Format.Format_Grayscale8)
-        self.image_label.setPixmap(QtGui.QPixmap.fromImage(qimg.scaled(w * 2, h * 2)))
+        rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+        det = self._latest_det
+        if det is not None and det.frame_seq == frame.seq:
+            for q in det.corners_px:
+                cv2.polylines(
+                    rgb, [q.astype(np.int32)],
+                    isClosed=True, color=(0, 255, 0), thickness=1, lineType=cv2.LINE_AA,
+                )
+        # Keep a reference so QImage's data isn't freed before paint.
+        self._rgb_buf = np.ascontiguousarray(rgb)
+        qimg = QtGui.QImage(
+            self._rgb_buf.data, w, h, w * 3, QtGui.QImage.Format.Format_RGB888,
+        )
+        self.image_label.setPixmap(
+            QtGui.QPixmap.fromImage(qimg.scaled(w * self.SCALE, h * self.SCALE))
+        )
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         self._manual.handle_key_press(event)

@@ -2,8 +2,12 @@
 
 Reads data/recordings/<id>/measurements.csv and re-emits Frame + DronePose
 messages at the rate they were originally captured (scaled by `speed`).
-Lets perception/planning iterate without flying — wire the same signals
-where you'd wire UdpVideoThread / CrazyflieLink.
+
+ReplayThread implements both the VideoSource and DroneLink protocols
+(see src/io/sources.py) so it can be wired in wherever UdpVideoThread +
+CrazyflieLink would go. set_setpoint and send_stop are no-ops: in replay
+there is no drone to command, so the controller / manual control's
+output is dropped on the floor — only live or Webots can actually drive.
 """
 
 from __future__ import annotations
@@ -15,12 +19,13 @@ from pathlib import Path
 import cv2
 from PyQt6 import QtCore
 
-from src.messages import DronePose, Frame
+from src.messages import DronePose, Frame, Setpoint
 
 
 class ReplayThread(QtCore.QThread):
     frame_ready = QtCore.pyqtSignal(object)  # Frame
     pose_ready = QtCore.pyqtSignal(object)  # DronePose
+    connected = QtCore.pyqtSignal(str)
 
     def __init__(
         self,
@@ -32,6 +37,23 @@ class ReplayThread(QtCore.QThread):
         super().__init__(parent)
         self._dir = Path(recording_dir)
         self._speed = speed
+
+    def open(self) -> None:
+        """DroneLink lifecycle. The thread is started separately as the
+        video source; here we just fire `connected` so the UI updates."""
+        self.connected.emit(f"replay:{self._dir.name}")
+
+    def close(self) -> None:
+        self.requestInterruption()
+        self.wait()
+
+    @QtCore.pyqtSlot(object)
+    def set_setpoint(self, sp: Setpoint) -> None:  # noqa: ARG002
+        """No-op: replay cannot command a drone."""
+
+    @QtCore.pyqtSlot()
+    def send_stop(self) -> None:
+        """No-op: replay cannot command a drone."""
 
     def run(self) -> None:
         csv_path = self._dir / "measurements.csv"
@@ -45,6 +67,8 @@ class ReplayThread(QtCore.QThread):
         seq = 0
 
         for r in rows:
+            if self.isInterruptionRequested():
+                return
             t_rec = float(r["timestamp"])
             target = t0_wall + (t_rec - t0_rec) / self._speed
             delay = target - time.monotonic()

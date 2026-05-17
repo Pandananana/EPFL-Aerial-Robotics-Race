@@ -1,33 +1,40 @@
 """Live entry point: instantiate modules, wire them via Qt signals, and run.
 
+The IO backends are pluggable — see src/io/sources.py for the VideoSource
+and DroneLink protocols. `build_system` takes them as arguments; `main`
+picks one based on the --source flag.
+
 Topology (signal -> slot):
 
-   UdpVideoThread.frame_ready ----+--> Recorder.on_frame
+   video.frame_ready -------------+--> Recorder.on_frame  (live only)
                                   +--> GateDetector.on_frame
                                   +--> FpvWindow.on_frame
 
-   CrazyflieLink.pose_ready ------+--> Recorder.on_pose
+   link.pose_ready ---------------+--> Recorder.on_pose   (live only)
                                   +--> Planner.on_pose
                                   +--> Controller.on_pose
-   CrazyflieLink.connected         -> (status text update)
+   link.connected ----------------+--> FpvWindow.set_status
 
-   GateDetector.detection_ready  ---> PoseEstimator.on_detection
+   GateDetector.detection_ready --+--> PoseEstimator.on_detection
+                                  +--> FpvWindow.on_detection
    PoseEstimator.gate_ready      ---> Planner.on_gate
    Planner.waypoint_ready        ---> Controller.on_waypoint
 
-   Controller.setpoint_ready ---+--> CrazyflieLink.set_setpoint
+   Controller.setpoint_ready ---+--> link.set_setpoint
    ManualControl.setpoint_ready -+
-   ManualControl.stop_requested ---> CrazyflieLink.send_stop
+   ManualControl.stop_requested ---> link.send_stop
 
    FpvWindow key events -> ManualControl.handle_key_press / handle_key_release
 
 Two setpoint sources (Controller and ManualControl) both feed the link's
-Latest[Setpoint] latch; whichever wrote last wins on the next radio tick.
-Arbitration is the controls team's call.
+sink; whichever wrote last wins on the next radio tick. Arbitration is
+the controls team's call. In replay mode the link's set_setpoint /
+send_stop are no-ops — there is no drone to command.
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -40,6 +47,8 @@ from src.control.manual import ManualControl
 from src.control.planner import Planner
 from src.io.crazyflie_link import CrazyflieLink
 from src.io.recorder import Recorder
+from src.io.replay import ReplayThread
+from src.io.sources import DroneLink, VideoSource
 from src.io.video_stream import UdpVideoThread
 from src.perception.gate_detector import GateDetector
 from src.perception.pose_estimator import PoseEstimator
@@ -56,9 +65,7 @@ def load_config(config_dir: Path | None = None) -> tuple[dict, dict]:
     return cfg, cal
 
 
-def build_system(cfg: dict, cal: dict) -> dict:
-    """Instantiate and wire every module. Returns the bag of objects so the
-    caller (main / a test / a script) can start them and keep them alive."""
+def build_live_backends(cfg: dict) -> tuple[VideoSource, DroneLink]:
     video = UdpVideoThread(
         aideck_ip=cfg["network"]["aideck_ip"],
         aideck_port=cfg["network"]["aideck_port"],
@@ -73,7 +80,24 @@ def build_system(cfg: dict, cal: dict) -> dict:
         cache_dir=cfg["crazyflie"]["cache_dir"],
         setpoint_rate_hz=cfg["control"]["setpoint_rate_hz"],
     )
-    recorder = Recorder(base_dir=cfg["recording"]["base_dir"])
+    return video, link
+
+
+def build_replay_backend(recording: Path, speed: float) -> ReplayThread:
+    """Single ReplayThread serves as both VideoSource and DroneLink."""
+    return ReplayThread(recording, speed=speed)
+
+
+def build_system(
+    cfg: dict,
+    cal: dict,
+    *,
+    video: VideoSource,
+    link: DroneLink,
+    record: bool = True,
+) -> dict:
+    """Instantiate and wire every module. Returns the bag of objects so
+    the caller can start them and keep them alive."""
     detector = GateDetector(model_name=cfg["perception"]["detector"])
     estimator = PoseEstimator(
         camera_matrix=np.array(cal["camera_matrix"], dtype=np.float64),
@@ -90,11 +114,15 @@ def build_system(cfg: dict, cal: dict) -> dict:
     )
 
     # IO -> consumers
-    video.frame_ready.connect(recorder.on_frame)
     video.frame_ready.connect(detector.on_frame)
-    link.pose_ready.connect(recorder.on_pose)
     link.pose_ready.connect(planner.on_pose)
     link.pose_ready.connect(controller.on_pose)
+
+    recorder: Recorder | None = None
+    if record:
+        recorder = Recorder(base_dir=cfg["recording"]["base_dir"])
+        video.frame_ready.connect(recorder.on_frame)
+        link.pose_ready.connect(recorder.on_pose)
 
     # Perception chain
     detector.detection_ready.connect(estimator.on_detection)
@@ -118,14 +146,45 @@ def build_system(cfg: dict, cal: dict) -> dict:
     }
 
 
-def main() -> int:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    ap = argparse.ArgumentParser(description="Run the integrated drone-race system.")
+    ap.add_argument(
+        "--source", choices=["live", "replay"], default="live",
+        help="IO backend: 'live' connects to the AI-deck and Crazyflie; "
+             "'replay' plays back a recording (controller setpoints are dropped).",
+    )
+    ap.add_argument(
+        "--recording", type=Path, default=None,
+        help="Recording directory for --source replay (e.g. data/recordings/<id>).",
+    )
+    ap.add_argument(
+        "--speed", type=float, default=1.0,
+        help="Replay speed multiplier (default 1.0).",
+    )
+    return ap.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     cfg, cal = load_config()
-    app = QtWidgets.QApplication(sys.argv)
-    sys_ = build_system(cfg, cal)
+    app = QtWidgets.QApplication(sys.argv[:1])
+
+    if args.source == "live":
+        video, link = build_live_backends(cfg)
+        record = True
+    else:
+        if args.recording is None:
+            raise SystemExit("--source replay requires --recording <dir>")
+        replay = build_replay_backend(args.recording, args.speed)
+        video, link = replay, replay
+        record = False
+
+    sys_ = build_system(cfg, cal, video=video, link=link, record=record)
 
     win = FpvWindow(sys_["manual"])
     sys_["video"].frame_ready.connect(win.on_frame)
-    sys_["link"].connected.connect(lambda uri: win.set_status(f"Connected to {uri}"))
+    sys_["detector"].detection_ready.connect(win.on_detection)
+    sys_["link"].connected.connect(lambda s: win.set_status(f"Connected to {s}"))
     win.show()
 
     sys_["video"].start()
@@ -134,7 +193,8 @@ def main() -> int:
         return app.exec()
     finally:
         sys_["link"].close()
-        sys_["recorder"].close()
+        if sys_["recorder"] is not None:
+            sys_["recorder"].close()
 
 
 if __name__ == "__main__":

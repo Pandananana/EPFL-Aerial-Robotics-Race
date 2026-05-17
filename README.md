@@ -61,15 +61,21 @@ lives under `src/`. Edit `config/default.yaml` and `config/calibration.yaml`
 before flying.
 
 ```bash
-uv run python scripts/live_viewer.py    # full live stack with FPV window
-uv run python scripts/replay_log.py data/recordings/<run>   # replay through perception, no drone
+uv run python scripts/live_viewer.py                                        # live stack: AI-deck + Crazyflie + FPV window
+uv run python scripts/live_viewer.py --source replay --recording data/recordings/<run>   # replay through perception + FPV window, no drone
+uv run python scripts/replay_log.py data/recordings/<run>                   # replay through perception, print only
 ```
+
+The viewer is backend-agnostic — IO is wired through the `VideoSource` and
+`DroneLink` protocols in `src/io/sources.py`. In replay mode the controller
+and manual setpoints are dropped on the floor (no drone to command); add a
+Webots backend there when sim integration lands.
 
 Module layout:
 
 - `src/messages.py` — shared dataclasses (Frame, DronePose, GateDetection2D, Gate3D, Setpoint)
 - `src/bus.py` — `Latest[T]` latch for "most recent value" sharing (Qt signals handle events)
-- `src/io/` — UDP video stream, Crazyflie radio link, disk recorder, recording replay
+- `src/io/` — backend protocols (`sources.py`), UDP video stream, Crazyflie radio link, disk recorder, recording replay
 - `src/perception/` — gate detector (wraps `src/perception/models/`), 3D pose estimator
 - `src/perception/models/` — detector backends + shared YOLO dataset builder + committed `best.pt` weights
 - `src/control/` — planner, controller (stubs), and keyboard manual override
