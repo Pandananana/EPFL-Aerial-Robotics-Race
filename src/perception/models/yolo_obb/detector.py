@@ -13,7 +13,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-DEFAULT_WEIGHTS = Path(__file__).resolve().parent / "best.pt"
+DEFAULT_WEIGHTS = Path(__file__).resolve().parent / "obb.pt"
 CONF_THRESHOLD = 0.25
 
 _model = None
@@ -29,7 +29,7 @@ def _load_model():
     if not weights.exists():
         raise FileNotFoundError(
             f"YOLO OBB weights not found at {weights}. "
-            f"Train first with `python -m models.yolo_obb.train`."
+            f"Download them from here: https://www.dropbox.com/scl/fo/340ih7m6w5my5rtl6vgon/APJeP3MCXA9o0W8G7lH2KS8?rlkey=t7pp4au21ek4nqs0z0iqfxkv3&st=2b3ny5hk&dl=0"
         )
     _model = YOLO(str(weights))
     return _model
