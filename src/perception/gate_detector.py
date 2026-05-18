@@ -5,10 +5,9 @@ The choice of model is config-driven; each backend exposes the same
 `predict_gates(image) -> list[(4,2) np.ndarray]` contract documented in
 the project CLAUDE.md, so swapping is a one-line config change.
 
-Inference is currently synchronous on whatever thread the `on_frame` slot
-runs on. If YOLO inference becomes the bottleneck and starts backing up
-the Qt event queue, moveToThread() this object onto its own QThread —
-the public signal/slot interface stays identical.
+`on_frame` is synchronous, but `main.build_system` moves the detector
+onto its own QThread so inference (~65 ms for the YOLO models) doesn't
+block the control loop on the main Qt thread.
 """
 
 from __future__ import annotations

@@ -44,7 +44,7 @@ from pathlib import Path
 
 import numpy as np
 import yaml
-from PyQt6 import QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 from src.control.controller import Controller
 from src.control.manual import ManualControl
@@ -79,6 +79,14 @@ def build_system(
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
     detector = GateDetector(model_name=cfg["perception"]["detector"])
+    # Heavy YOLO inference (~65 ms) runs on its own thread so it doesn't
+    # block the control loop. Qt makes the cross-thread signal connection
+    # queued automatically.
+    detector_thread = QtCore.QThread()
+    detector_thread.setObjectName("GateDetectorThread")
+    detector.moveToThread(detector_thread)
+    detector_thread.start()
+
     estimator = PoseEstimator(
         camera_matrix=np.array(cal["camera_matrix"], dtype=np.float64),
         dist_coeffs=np.array(cal["dist_coeffs"], dtype=np.float64),
@@ -119,6 +127,7 @@ def build_system(
         "link": link,
         "recorder": recorder,
         "detector": detector,
+        "detector_thread": detector_thread,
         "estimator": estimator,
         "planner": planner,
         "controller": controller,
@@ -196,6 +205,8 @@ def main(argv: list[str] | None = None) -> int:
         sys_["link"].close()
         if sys_["recorder"] is not None:
             sys_["recorder"].close()
+        sys_["detector_thread"].quit()
+        sys_["detector_thread"].wait()
 
 
 if __name__ == "__main__":
