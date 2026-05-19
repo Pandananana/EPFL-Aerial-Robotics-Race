@@ -11,7 +11,7 @@ from src.io.live.video import UdpVideoThread
 from src.io.sources import DroneLink, VideoSource
 
 
-def build_live(cfg: dict) -> tuple[VideoSource, DroneLink]:
+def build_live(cfg: dict, *, no_fly: bool = False) -> tuple[VideoSource, DroneLink]:
     video = UdpVideoThread(
         aideck_ip=cfg["network"]["aideck_ip"],
         aideck_port=cfg["network"]["aideck_port"],
@@ -21,6 +21,7 @@ def build_live(cfg: dict) -> tuple[VideoSource, DroneLink]:
         uri=cfg["crazyflie"]["uri"],
         cache_dir=cfg["crazyflie"]["cache_dir"],
         setpoint_rate_hz=cfg["control"]["setpoint_rate_hz"],
+        disable_flight=no_fly,
     )
     return video, link
 

@@ -32,11 +32,13 @@ class CrazyflieLink(QtCore.QObject):
         uri: str,
         cache_dir: str,
         setpoint_rate_hz: float = 10.0,
+        disable_flight: bool = False,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._uri = uri
         self._setpoint: Latest[Setpoint] = Latest()
+        self._disable_flight = disable_flight
 
         cflib.crtp.init_drivers()
         self.cf = Crazyflie(rw_cache=cache_dir)
@@ -53,11 +55,15 @@ class CrazyflieLink(QtCore.QObject):
     def set_setpoint(self, sp: Setpoint) -> None:
         """Push a desired setpoint. The radio timer will send the latest
         one on its next tick."""
+        if self._disable_flight:
+            return
         self._setpoint.set(sp)
 
     @QtCore.pyqtSlot()
     def send_stop(self) -> None:
         """Immediately send a stop setpoint (motors off). Use for E-stop."""
+        if self._disable_flight:
+            return
         self.cf.commander.send_stop_setpoint()
 
     def open(self) -> None:
@@ -71,8 +77,11 @@ class CrazyflieLink(QtCore.QObject):
             self.cf.close_link()
 
     def _on_connected(self, uri: str) -> None:
-        self.cf.supervisor.send_arming_request(True)
-        self._timer.start()
+        # In disable_flight mode we still want pose logging (useful while
+        # recording), but we must not arm or run the setpoint loop.
+        if not self._disable_flight:
+            self.cf.supervisor.send_arming_request(True)
+            self._timer.start()
         self._start_logging()
 
     def _start_logging(self) -> None:

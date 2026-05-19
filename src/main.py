@@ -157,6 +157,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "as soon as the drone link is connected. Off by default so manual "
              "control stays in charge.",
     )
+    ap.add_argument(
+        "--no-fly", action="store_true",
+        help="Connect to the AI-deck and Crazyflie for video + pose but never "
+             "arm or send setpoints. Use this when recording calibration / "
+             "training frames so the drone stays inert in your hand.",
+    )
     return ap.parse_args(argv)
 
 
@@ -166,8 +172,13 @@ def main(argv: list[str] | None = None) -> int:
     app = QtWidgets.QApplication(sys.argv[:1])
 
     if args.source == "live":
-        video, link = build_live(cfg)
+        video, link = build_live(cfg, no_fly=args.no_fly)
         record = True
+        if args.no_fly:
+            print("[main] --no-fly: arming + setpoints disabled; video/pose only.")
+            if args.autostart:
+                print("[main] --no-fly overrides --autostart; mission will not run.")
+                args.autostart = False
     elif args.source == "webots":
         backend = build_webots(cfg)
         video, link = backend, backend
