@@ -17,6 +17,8 @@ def build_webots(cfg: dict) -> WebotsBackend:
     return WebotsBackend(
         camera_fps=cfg["webots"]["camera_fps"],
         pose_rate_hz=cfg["webots"]["pose_rate_hz"],
+        pose_position_noise_std_m=cfg["webots"].get("pose_position_noise_std_m", 0.0),
+        pose_attitude_noise_std_deg=cfg["webots"].get("pose_attitude_noise_std_deg", 0.0),
     )
 
 

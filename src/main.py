@@ -49,6 +49,7 @@ from PyQt6 import QtCore, QtWidgets
 from src.control.controller import Controller
 from src.control.manual import ManualControl
 from src.control.planner import Planner
+from src.control.states.gate_tracker import GateTracker
 from src.io.live import build_live
 from src.io.recorder import Recorder
 from src.io.replay import build_replay
@@ -108,9 +109,19 @@ def build_system(
 
     recorder: Recorder | None = None
     if record:
-        recorder = Recorder(base_dir=cfg["recording"]["base_dir"])
+        recorder = Recorder(
+            base_dir=cfg["recording"]["base_dir"],
+            pose_log_every_n=cfg["recording"].get("pose_log_every_n", 10),
+        )
         video.frame_ready.connect(recorder.on_frame)
         link.pose_ready.connect(recorder.on_pose)
+        link.connected.connect(recorder.on_connected)
+        detector.detection_ready.connect(recorder.on_detection)
+        estimator.gate_ready.connect(recorder.on_gate)
+        planner.state_changed.connect(recorder.on_state_changed)
+        planner.waypoint_ready.connect(recorder.on_waypoint)
+        controller.setpoint_ready.connect(recorder.on_setpoint)
+        manual.setpoint_ready.connect(recorder.on_setpoint)
 
     # Perception chain
     detector.detection_ready.connect(estimator.on_detection)
@@ -182,7 +193,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.source == "webots":
         backend = build_webots(cfg)
         video, link = backend, backend
-        record = False
+        record = True
         # The Webots assignment world has emissive pink-panel gates; the
         # HSV-based pink detector is purpose-built for them and avoids the
         # domain gap that trips up the AI-deck-trained YOLO models.
@@ -195,6 +206,47 @@ def main(argv: list[str] | None = None) -> int:
         record = False
 
     sys_ = build_system(cfg, cal, video=video, link=link, record=record)
+
+    def print_gate3d(g):
+        if not g.corners_cam_m:
+            print(f"[GATE3D] frame={g.frame_seq} no valid 3D gates", flush=True)
+            return
+
+        for i, corners in enumerate(g.corners_cam_m):
+            center = corners.mean(axis=0)
+            print(
+                f"[GATE3D] frame={g.frame_seq} gate={i} "
+                f"cam_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}]m "
+                f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
+                flush=True,
+            )
+
+    sys_["estimator"].gate_ready.connect(print_gate3d)
+
+    if args.source == "replay":
+        debug_tracker = GateTracker()
+        debug_poses = {}
+        sys_["link"].pose_ready.connect(lambda p: debug_poses.__setitem__(p.timestamp, p))
+
+        def update_debug_tracker(g):
+            pose = debug_poses.get(g.timestamp)
+            if pose is not None:
+                print(
+                    f"[POSE_DEBUG] frame={g.frame_seq} "
+                    f"pos=[{pose.x:+.2f}, {pose.y:+.2f}, {pose.z:+.2f}]m "
+                    f"rpy=[{pose.roll:+.1f}, {pose.pitch:+.1f}, {pose.yaw:+.1f}]deg",
+                    flush=True,
+                )
+                debug_tracker.update(g, pose)
+
+        sys_["estimator"].gate_ready.connect(update_debug_tracker)
+
+    sys_["planner"].state_changed.connect(
+        lambda name: print(f"[FSM] -> {name}", flush=True)
+    )
+    sys_["planner"].mission_done.connect(
+        lambda: print("[FSM] mission done", flush=True)
+    )
 
     if args.autostart:
         sys_["link"].connected.connect(lambda _s: sys_["planner"].start())
