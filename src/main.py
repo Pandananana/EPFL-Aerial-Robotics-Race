@@ -202,11 +202,7 @@ def main(argv: list[str] | None = None) -> int:
     # whether the mission was autostarted or kicked off manually later.
     sys_["planner"].mission_done.connect(sys_["link"].send_stop)
 
-    win = FpvWindow(
-        sys_["manual"],
-        camera_matrix=np.array(cal["camera_matrix"], dtype=np.float64),
-        dist_coeffs=np.array(cal["dist_coeffs"], dtype=np.float64),
-    )
+    win = FpvWindow(sys_["manual"])
     sys_["video"].frame_ready.connect(win.on_frame)
     sys_["detector"].detection_ready.connect(win.on_detection)
     sys_["link"].connected.connect(lambda s: win.set_status(f"Connected to {s}"))
