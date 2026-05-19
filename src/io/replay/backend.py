@@ -2,6 +2,7 @@
 
 Reads data/recordings/<id>/measurements.csv and re-emits Frame + DronePose
 messages at the rate they were originally captured (scaled by `speed`).
+With step mode enabled, each keypress advances one recorded row instead.
 
 ReplayThread implements both the VideoSource and DroneLink protocols
 (see src/io/sources.py) so it can be wired in wherever UdpVideoThread +
@@ -32,11 +33,16 @@ class ReplayThread(QtCore.QThread):
         recording_dir: Path,
         *,
         speed: float = 1.0,
+        step: bool = False,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._dir = Path(recording_dir)
         self._speed = speed
+        self._step = step
+        self._mutex = QtCore.QMutex()
+        self._step_ready = QtCore.QWaitCondition()
+        self._pending_steps = 0
 
     def open(self) -> None:
         """DroneLink lifecycle. The thread is started separately as the
@@ -45,6 +51,7 @@ class ReplayThread(QtCore.QThread):
 
     def close(self) -> None:
         self.requestInterruption()
+        self._wake()
         self.wait()
 
     @QtCore.pyqtSlot(object)
@@ -54,6 +61,18 @@ class ReplayThread(QtCore.QThread):
     @QtCore.pyqtSlot()
     def send_stop(self) -> None:
         """No-op: replay cannot command a drone."""
+
+    @QtCore.pyqtSlot()
+    def advance(self) -> None:
+        """Advance one recorded row in step mode."""
+        if not self._step:
+            return
+        self._mutex.lock()
+        try:
+            self._pending_steps += 1
+            self._step_ready.wakeOne()
+        finally:
+            self._mutex.unlock()
 
     def run(self) -> None:
         csv_path = self._dir / "measurements.csv"
@@ -70,10 +89,15 @@ class ReplayThread(QtCore.QThread):
             if self.isInterruptionRequested():
                 return
             t_rec = float(r["timestamp"])
-            target = t0_wall + (t_rec - t0_rec) / self._speed
-            delay = target - time.monotonic()
-            if delay > 0:
-                time.sleep(delay)
+            if self._step:
+                self._wait_for_step()
+                if self.isInterruptionRequested():
+                    return
+            else:
+                target = t0_wall + (t_rec - t0_rec) / self._speed
+                delay = target - time.monotonic()
+                if delay > 0:
+                    time.sleep(delay)
 
             self.pose_ready.emit(DronePose(
                 timestamp=t_rec,
@@ -87,3 +111,20 @@ class ReplayThread(QtCore.QThread):
                 continue
             seq += 1
             self.frame_ready.emit(Frame(timestamp=t_rec, seq=seq, image=img))
+
+    def _wait_for_step(self) -> None:
+        self._mutex.lock()
+        try:
+            while self._pending_steps <= 0 and not self.isInterruptionRequested():
+                self._step_ready.wait(self._mutex, 100)
+            if self._pending_steps > 0:
+                self._pending_steps -= 1
+        finally:
+            self._mutex.unlock()
+
+    def _wake(self) -> None:
+        self._mutex.lock()
+        try:
+            self._step_ready.wakeAll()
+        finally:
+            self._mutex.unlock()

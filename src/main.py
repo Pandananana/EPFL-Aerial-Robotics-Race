@@ -58,6 +58,7 @@ from src.io.sources import DroneLink, VideoSource
 from src.io.webots import build_webots
 from src.perception.gate_detector import GateDetector
 from src.perception.pose_estimator import PoseEstimator
+from src.ui.gate_debug_plot import GateDebugPlotter
 from src.ui.fpv_window import FpvWindow
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -164,6 +165,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Replay speed multiplier (default 1.0).",
     )
     ap.add_argument(
+        "--replay-step", action="store_true",
+        help="In replay mode, wait for a keypress in the FPV window before "
+             "emitting each recorded pose/frame row.",
+    )
+    ap.add_argument(
         "--autostart", action="store_true",
         help="Kick off the autonomous mission (takeoff -> recon -> race -> land) "
              "as soon as the drone link is connected. Off by default so manual "
@@ -174,6 +180,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Connect to the AI-deck and Crazyflie for video + pose but never "
              "arm or send setpoints. Use this when recording calibration / "
              "training frames so the drone stays inert in your hand.",
+    )
+    ap.add_argument(
+        "--gate-truth-csv", type=Path, default=None,
+        help="Optional gates.csv with true gate poses for the 3D debug plot. "
+             "Replay defaults to <recording>/gates.csv when present.",
     )
     return ap.parse_args(argv)
 
@@ -202,7 +213,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         if args.recording is None:
             raise SystemExit("--source replay requires --recording <dir>")
-        replay = build_replay(args.recording, args.speed)
+        replay = build_replay(args.recording, args.speed, step=args.replay_step)
         video, link = replay, replay
         record = False
 
@@ -210,6 +221,22 @@ def main(argv: list[str] | None = None) -> int:
 
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
+
+    debug_truth_csv = args.gate_truth_csv
+    if debug_truth_csv is None and args.source == "replay" and args.recording is not None:
+        candidate = args.recording / "gates.csv"
+        if candidate.exists():
+            debug_truth_csv = candidate
+    if debug_truth_csv is None and args.source == "webots":
+        candidate = REPO_ROOT / "data" / "recordings" / "20260519_125737" / "gates.csv"
+        if candidate.exists():
+            debug_truth_csv = candidate
+
+    gate_debug_plotter = None
+    if args.source in {"webots", "replay"} and debug_truth_csv is not None:
+        gate_debug_plotter = GateDebugPlotter(truth_csv=debug_truth_csv)
+        sys_["link"].pose_ready.connect(gate_debug_plotter.on_pose)
+        print(f"[GATE_DEBUG] plotting true gates from {debug_truth_csv}", flush=True)
 
     def print_gate3d(g):
         if not g.corners_cam_m:
@@ -270,6 +297,9 @@ def main(argv: list[str] | None = None) -> int:
     sys_["planner"].mission_done.connect(sys_["link"].send_stop)
 
     win = FpvWindow(sys_["manual"])
+    if args.source == "replay" and args.replay_step:
+        win.key_pressed.connect(sys_["link"].advance)
+        print("[REPLAY] step mode: focus the FPV window and press any key to advance.", flush=True)
     sys_["video"].frame_ready.connect(win.on_frame)
     sys_["detector"].detection_ready.connect(win.on_detection)
     sys_["link"].connected.connect(lambda s: win.set_status(f"Connected to {s}"))

@@ -22,6 +22,8 @@ from src.messages import Frame, GateDetection2D
 
 
 class FpvWindow(QtWidgets.QWidget):
+    key_pressed = QtCore.pyqtSignal()
+
     SCALE = 2
     FRAME_BUFFER = 16  # frames retained while we wait for matching detections
 
@@ -80,6 +82,8 @@ class FpvWindow(QtWidgets.QWidget):
         )
 
     def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+        if not event.isAutoRepeat():
+            self.key_pressed.emit()
         self._manual.handle_key_press(event)
 
     def keyReleaseEvent(self, event: QtGui.QKeyEvent) -> None:
