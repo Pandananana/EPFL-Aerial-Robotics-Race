@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class PassThroughState(State):
     REACHED_M = 0.20
-    PASS_SPEED_MPS = 0.8
+    PASS_SPEED_MPS = 0.1
 
     def __init__(self, target_pos: np.ndarray, target_yaw_rad: float) -> None:
         self._pos = target_pos.copy()

@@ -16,3 +16,4 @@ src/perception/models/**/data
 src/perception/models/**/runs
 *.pt
 videos
+

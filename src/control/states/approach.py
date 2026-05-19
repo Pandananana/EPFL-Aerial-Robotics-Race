@@ -29,7 +29,7 @@ class ApproachState(State):
     APPROACH_DISTANCE_M = 1
     REACHED_DIST_M = 0.15
     REACHED_YAW_RAD = math.radians(8.0)
-    APPROACH_SPEED_MPS = 0.6
+    APPROACH_SPEED_MPS = 0.2
 
     def __init__(self, approach_pos: np.ndarray, target_yaw_rad: float) -> None:
         self._target_pos = approach_pos.copy()

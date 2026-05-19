@@ -24,9 +24,11 @@ import os
 import time
 
 import cv2
+import numpy as np
 from PyQt6 import QtCore
 
 from src.bus import Latest
+from src.control.states.gate_tracker import camera_corners_to_world
 from src.messages import (
     DronePose,
     Frame,
@@ -81,6 +83,7 @@ class Recorder(QtCore.QObject):
             "detected_gates",
             "gate_widths_m",
             "gate_reprojection_errors_px",
+            "gate_world_centers_m",
             "message",
         ]
         self._log = csv.DictWriter(self._log_file, fieldnames=self._log_fields)
@@ -150,6 +153,13 @@ class Recorder(QtCore.QObject):
 
     @QtCore.pyqtSlot(object)
     def on_gate(self, gate: Gate3D) -> None:
+        pose = self._pose.get()
+        world_centers = None
+        if pose is not None and gate.corners_cam_m:
+            world_centers = json.dumps([
+                np.mean(camera_corners_to_world(c, pose), axis=0).tolist()
+                for c in gate.corners_cam_m
+            ])
         self._write_log(
             timestamp=gate.timestamp,
             event="gate_3d",
@@ -157,6 +167,7 @@ class Recorder(QtCore.QObject):
             detected_gates=len(gate.corners_cam_m),
             gate_widths_m=json.dumps(gate.widths_m),
             gate_reprojection_errors_px=json.dumps(gate.reprojection_errors_px),
+            gate_world_centers_m=world_centers or "",
         )
 
     @QtCore.pyqtSlot(object)

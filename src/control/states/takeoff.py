@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class TakeoffState(State):
     SETTLE_TOLERANCE_M = 0.08
     SETTLE_TIME_S = 1.0
-    TAKEOFF_SPEED_MPS = 0.5
+    TAKEOFF_SPEED_MPS = 0.2
 
     def __init__(self) -> None:
         self._settled_at: float | None = None

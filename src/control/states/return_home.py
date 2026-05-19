@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class ReturnHomeState(State):
     REACHED_M = 0.20
     YAW_REACHED_RAD = math.radians(10.0)
-    RETURN_SPEED_MPS = 0.7
+    RETURN_SPEED_MPS = 0.2
 
     def tick(self, ctx: Context) -> State | None:
         ctx.emit(

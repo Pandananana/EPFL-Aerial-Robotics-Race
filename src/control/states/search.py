@@ -27,7 +27,7 @@ def _angle_diff(a: float, b: float) -> float:
 class SearchState(State):
     YAW_STEP_RAD = 0.3                          # ~17 deg between target increments
     YAW_ADVANCE_TOL_RAD = math.radians(5.0)
-    SEARCH_SPEED_MPS = 0.4
+    SEARCH_SPEED_MPS = 0.2
     APPROACH_DISTANCE_M = 0.7
 
     def __init__(self) -> None:

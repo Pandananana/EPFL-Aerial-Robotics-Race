@@ -1,7 +1,7 @@
 .PHONY: live webots replay
 
 live:
-	uv run python -m src.main --source live
+	uv run python -m src.main --source live --autostart
 
 webots:
 	uv run python -m src.main --source webots --autostart

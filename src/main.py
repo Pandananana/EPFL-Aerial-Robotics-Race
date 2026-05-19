@@ -49,7 +49,8 @@ from PyQt6 import QtCore, QtWidgets
 from src.control.controller import Controller
 from src.control.manual import ManualControl
 from src.control.planner import Planner
-from src.control.states.gate_tracker import GateTracker
+from src.bus import Latest
+from src.control.states.gate_tracker import GateTracker, camera_corners_to_world
 from src.io.live import build_live
 from src.io.recorder import Recorder
 from src.io.replay import build_replay
@@ -207,19 +208,33 @@ def main(argv: list[str] | None = None) -> int:
 
     sys_ = build_system(cfg, cal, video=video, link=link, record=record)
 
+    _latest_pose = Latest()
+    sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
+
     def print_gate3d(g):
         if not g.corners_cam_m:
             print(f"[GATE3D] frame={g.frame_seq} no valid 3D gates", flush=True)
             return
 
+        pose = _latest_pose.get()
         for i, corners in enumerate(g.corners_cam_m):
-            center = corners.mean(axis=0)
-            print(
-                f"[GATE3D] frame={g.frame_seq} gate={i} "
-                f"cam_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}]m "
-                f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
-                flush=True,
-            )
+            if pose is not None:
+                world_pts = camera_corners_to_world(corners, pose)
+                center = np.mean(world_pts, axis=0)
+                print(
+                    f"[GATE3D] frame={g.frame_seq} gate={i} "
+                    f"world_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}]m "
+                    f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
+                    flush=True,
+                )
+            else:
+                cam_center = corners.mean(axis=0)
+                print(
+                    f"[GATE3D] frame={g.frame_seq} gate={i} "
+                    f"cam_center=[{cam_center[0]:+.2f}, {cam_center[1]:+.2f}, {cam_center[2]:+.2f}]m "
+                    f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
+                    flush=True,
+                )
 
     sys_["estimator"].gate_ready.connect(print_gate3d)
 
