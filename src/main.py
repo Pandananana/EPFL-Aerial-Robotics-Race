@@ -217,7 +217,8 @@ def main(argv: list[str] | None = None) -> int:
         video, link = replay, replay
         record = False
 
-    sys_ = build_system(cfg, cal, video=video, link=link, record=record)
+    active_cal = cal.get(args.source, cal)
+    sys_ = build_system(cfg, active_cal, video=video, link=link, record=record)
 
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
