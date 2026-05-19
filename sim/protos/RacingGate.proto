@@ -31,16 +31,25 @@ PROTO RacingGate [
         translation IS translation
         rotation IS rotation
         children [
-            Pose {
+            Transform {
                 translation 0 0 0
+                scale IS goalSize
                 children [
                     Shape {
                         appearance PBRAppearance {
                             emissiveColor 1 0 1
                             transparency IS goalVisible
                         }
-                        geometry Box {
-                            size IS goalSize
+                        geometry IndexedFaceSet {
+                            coord Coordinate {
+                                point [
+                                    0  0.5 -0.5
+                                    0 -0.5 -0.5
+                                    0 -0.5  0.5
+                                    0  0.5  0.5
+                                ]
+                            }
+                            coordIndex [ 3 2 1 0 -1 ]
                         }
                     }
                 ]

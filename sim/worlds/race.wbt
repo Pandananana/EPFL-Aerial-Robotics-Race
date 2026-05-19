@@ -327,7 +327,7 @@ DEF GATE3 RacingGate {
 DEF GATE4 RacingGate {
   name "GATE4"
   translation 4.3625 2.6575 1.465
-  rotation 0 0 1 -0.0844963267948966
+  rotation 0 0 1 3.0570963267948965
   goalSize 0.04 0.4 0.4
   topBeamTranslation 0 0 0.23
   topBeamScale 0.4 0.06 0.04
