@@ -229,7 +229,7 @@ def main(argv: list[str] | None = None) -> int:
         if candidate.exists():
             debug_truth_csv = candidate
     if debug_truth_csv is None and args.source == "webots":
-        candidate = REPO_ROOT / "data" / "recordings" / "20260519_125737" / "gates.csv"
+        candidate = REPO_ROOT / "data" / "webots_gates.csv"
         if candidate.exists():
             debug_truth_csv = candidate
 
@@ -237,7 +237,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.source in {"webots", "replay"} and debug_truth_csv is not None:
         gate_debug_plotter = GateDebugPlotter(truth_csv=debug_truth_csv)
         sys_["link"].pose_ready.connect(gate_debug_plotter.on_pose)
+        sys_["estimator"].gate_ready.connect(gate_debug_plotter.on_gate)
+        sys_["planner"].gate_estimate_ready.connect(gate_debug_plotter.on_gate_estimate)
         print(f"[GATE_DEBUG] plotting true gates from {debug_truth_csv}", flush=True)
+        if args.source == "webots":
+            print("[GATE_DEBUG] using Webots world frame: x forward, y left, z up", flush=True)
 
     def print_gate3d(g):
         if not g.corners_cam_m:

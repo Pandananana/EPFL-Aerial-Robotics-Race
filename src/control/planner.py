@@ -34,6 +34,7 @@ class Planner(QtCore.QObject):
     waypoint_ready = QtCore.pyqtSignal(object)   # Waypoint
     mission_done = QtCore.pyqtSignal()           # fires once after landing
     state_changed = QtCore.pyqtSignal(str)       # state class name
+    gate_estimate_ready = QtCore.pyqtSignal(object)  # current Kalman gate corners
 
     DEFAULT_GATE_COUNT = 5
 
@@ -96,6 +97,8 @@ class Planner(QtCore.QObject):
             return
         ctx = self._make_context(pose)
         self._state.on_gate(ctx, gate)
+        if self._tracker.kalman is not None:
+            self.gate_estimate_ready.emit(self._tracker.kalman.corners())
 
     def _make_context(self, pose: DronePose) -> Context:
         return Context(

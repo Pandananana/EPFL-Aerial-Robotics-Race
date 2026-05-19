@@ -166,9 +166,29 @@ class GateDebugPlotter(QtCore.QObject):
         self._ax.set_ylabel("X")
         self._ax.set_zlabel("Z")
         self._ax.set_title("True gates vs current estimates")
-        self._ax.set_xlim(2, -2)
-        self._ax.set_ylim(-2, 2)
-        self._ax.set_zlim(0, 2.5)
+        self._set_dynamic_bounds()
         self._ax.view_init(elev=40, azim=-80)
         self._fig.canvas.draw_idle()
         self._plt.pause(0.001)
+
+    def _set_dynamic_bounds(self) -> None:
+        gate_sets = list(self._truth.values()) + self._raw_estimates
+        if self._kalman_estimate is not None:
+            gate_sets.append(self._kalman_estimate)
+        if not gate_sets:
+            self._ax.set_xlim(2, -2)
+            self._ax.set_ylim(-2, 2)
+            self._ax.set_zlim(0, 2.5)
+            return
+
+        pts = np.vstack(gate_sets)
+        xyz_min = pts.min(axis=0)
+        xyz_max = pts.max(axis=0)
+        span = np.maximum(xyz_max - xyz_min, 1.0)
+        margin = 0.15 * span
+        lo = xyz_min - margin
+        hi = xyz_max + margin
+
+        self._ax.set_xlim(hi[1], lo[1])
+        self._ax.set_ylim(lo[0], hi[0])
+        self._ax.set_zlim(max(0.0, lo[2]), hi[2])
