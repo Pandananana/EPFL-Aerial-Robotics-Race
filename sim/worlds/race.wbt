@@ -28,8 +28,8 @@ Viewpoint {
 TexturedBackground {
 }
 Crazyflie {
-  translation 1 4 0.115
-  rotation 0 0 1 -1.5708
+  translation 5.745 4 0.115
+  rotation 0 0 1 2.61799
   name "crazyflie"
   controller "<extern>"
   extensionSlot [
@@ -220,7 +220,7 @@ DEF CEILING Solid {
   boundingObject USE DOOR_WALL_SHAPE
 }
 DEF TAKE_OFF_PAD Solid {
-  translation 1 4 0.05
+  translation 5.745 4 0.05
   children [
     DEF PAD_SHAPE Shape {
       appearance PBRAppearance {
@@ -262,81 +262,81 @@ DEF FLIGHT_AREA Solid {
 }
 DEF GATE0 RacingGate {
   name "GATE0"
-  translation 1.6377893840781272 1.54142326467437 1.9782607860956272
-  rotation 0 0 1 -0.7289208231162027
-  goalSize 0.04 0.36266645649874474 0.4
+  translation 4.345 4.7725 1.155
+  rotation 0 0 1 -0.0332963267948966
+  goalSize 0.04 0.29 0.4
   topBeamTranslation 0 0 0.23
-  topBeamScale 0.36266645649874474 0.06 0.04
+  topBeamScale 0.29 0.06 0.04
   bottomBeamTranslation 0 0 -0.23
-  bottomBeamScale 0.36266645649874474 0.06 0.04
-  leftBeamTranslation 0 0.21133322824937237 -0.8391303930478136
-  leftBeamScale 2.198260786095627 0.06 0.04
-  rightBeamTranslation 0 -0.21133322824937237 -0.8391303930478136
-  rightBeamScale 2.198260786095627 0.06 0.04
-  leftLegTranslation 0 0.21133322824937237 -1.9582607860956271
-  rightLegTranslation 0 -0.21133322824937237 -1.9582607860956271
+  bottomBeamScale 0.29 0.06 0.04
+  leftBeamTranslation 0 0.175 -0.4275
+  leftBeamScale 1.375 0.06 0.04
+  rightBeamTranslation 0 -0.175 -0.4275
+  rightBeamScale 1.375 0.06 0.04
+  leftLegTranslation 0 0.175 -1.135
+  rightLegTranslation 0 -0.175 -1.135
 }
 DEF GATE1 RacingGate {
   name "GATE1"
-  translation 4.667239937266164 2.412033197088558 1.2759400495844417
-  rotation 0 0 1 -0.014646530133764546
-  goalSize 0.04 0.42631562495328823 0.4
+  translation 3.36 4.7775 1.20
+  rotation 0 0 1 0.2756036732051034
+  goalSize 0.04 0.4 0.4
   topBeamTranslation 0 0 0.23
-  topBeamScale 0.42631562495328823 0.06 0.04
+  topBeamScale 0.4 0.06 0.04
   bottomBeamTranslation 0 0 -0.23
-  bottomBeamScale 0.42631562495328823 0.06 0.04
-  leftBeamTranslation 0 0.24315781247664411 -0.48797002479222085
-  leftBeamScale 1.4959400495844417 0.06 0.04
-  rightBeamTranslation 0 -0.24315781247664411 -0.48797002479222085
-  rightBeamScale 1.4959400495844417 0.06 0.04
-  leftLegTranslation 0 0.24315781247664411 -1.2559400495844417
-  rightLegTranslation 0 -0.24315781247664411 -1.2559400495844417
+  bottomBeamScale 0.4 0.06 0.04
+  leftBeamTranslation 0 0.23 -0.45
+  leftBeamScale 1.42 0.06 0.04
+  rightBeamTranslation 0 -0.23 -0.45
+  rightBeamScale 1.42 0.06 0.04
+  leftLegTranslation 0 0.23 -1.18
+  rightLegTranslation 0 -0.23 -1.18
 }
 DEF GATE2 RacingGate {
   name "GATE2"
-  translation 6.298888118963088 4.006107973875178 1.212731671621803
-  rotation 0 0 1 1.60731269664036
-  goalSize 0.04 0.4955500663261616 0.4
+  translation 2.5875 3.885 1.4025
+  rotation 0 0 1 1.7475926535897933
+  goalSize 0.04 0.29 0.4
   topBeamTranslation 0 0 0.23
-  topBeamScale 0.4955500663261616 0.06 0.04
+  topBeamScale 0.29 0.06 0.04
   bottomBeamTranslation 0 0 -0.23
-  bottomBeamScale 0.4955500663261616 0.06 0.04
-  leftBeamTranslation 0 0.27777503316308083 -0.4563658358109015
-  leftBeamScale 1.432731671621803 0.06 0.04
-  rightBeamTranslation 0 -0.27777503316308083 -0.4563658358109015
-  rightBeamScale 1.432731671621803 0.06 0.04
-  leftLegTranslation 0 0.27777503316308083 -1.192731671621803
-  rightLegTranslation 0 -0.27777503316308083 -1.192731671621803
+  bottomBeamScale 0.29 0.06 0.04
+  leftBeamTranslation 0 0.175 -0.55125
+  leftBeamScale 1.6225 0.06 0.04
+  rightBeamTranslation 0 -0.175 -0.55125
+  rightBeamScale 1.6225 0.06 0.04
+  leftLegTranslation 0 0.175 -1.3825
+  rightLegTranslation 0 -0.175 -1.3825
 }
 DEF GATE3 RacingGate {
   name "GATE3"
-  translation 4.869005686541325 5.765745282799762 1.8445977599018117
-  rotation 0 0 1 -3.0948740247497826
-  goalSize 0.04 0.3399751176950228 0.4
+  translation 3.41 3.17 1.2825
+  rotation 0 0 1 -3.0221963267948966
+  goalSize 0.04 0.5 0.4
   topBeamTranslation 0 0 0.23
-  topBeamScale 0.3399751176950228 0.06 0.04
+  topBeamScale 0.5 0.06 0.04
   bottomBeamTranslation 0 0 -0.23
-  bottomBeamScale 0.3399751176950228 0.06 0.04
-  leftBeamTranslation 0 0.1999875588475114 -0.7722988799509058
-  leftBeamScale 2.0645977599018117 0.06 0.04
-  rightBeamTranslation 0 -0.1999875588475114 -0.7722988799509058
-  rightBeamScale 2.0645977599018117 0.06 0.04
-  leftLegTranslation 0 0.1999875588475114 -1.8245977599018117
-  rightLegTranslation 0 -0.1999875588475114 -1.8245977599018117
+  bottomBeamScale 0.5 0.06 0.04
+  leftBeamTranslation 0 0.28 -0.49125
+  leftBeamScale 1.5025 0.06 0.04
+  rightBeamTranslation 0 -0.28 -0.49125
+  rightBeamScale 1.5025 0.06 0.04
+  leftLegTranslation 0 0.28 -1.2625
+  rightLegTranslation 0 -0.28 -1.2625
 }
 DEF GATE4 RacingGate {
   name "GATE4"
-  translation 2.54237470489155 5.9757540685998976 0.722010977888056
-  rotation 0 0 1 -2.2219280697823702
-  goalSize 0.04 0.4382830233104199 0.4
+  translation 4.3625 2.6575 1.465
+  rotation 0 0 1 -0.0844963267948966
+  goalSize 0.04 0.4 0.4
   topBeamTranslation 0 0 0.23
-  topBeamScale 0.4382830233104199 0.06 0.04
+  topBeamScale 0.4 0.06 0.04
   bottomBeamTranslation 0 0 -0.23
-  bottomBeamScale 0.4382830233104199 0.06 0.04
-  leftBeamTranslation 0 0.24914151165520995 -0.21100548894402793
-  leftBeamScale 0.9420109778880561 0.06 0.04
-  rightBeamTranslation 0 -0.24914151165520995 -0.21100548894402793
-  rightBeamScale 0.9420109778880561 0.06 0.04
-  leftLegTranslation 0 0.24914151165520995 -0.702010977888056
-  rightLegTranslation 0 -0.24914151165520995 -0.702010977888056
+  bottomBeamScale 0.4 0.06 0.04
+  leftBeamTranslation 0 0.23 -0.5825
+  leftBeamScale 1.685 0.06 0.04
+  rightBeamTranslation 0 -0.23 -0.5825
+  rightBeamScale 1.685 0.06 0.04
+  leftLegTranslation 0 0.23 -1.445
+  rightLegTranslation 0 -0.23 -1.445
 }
