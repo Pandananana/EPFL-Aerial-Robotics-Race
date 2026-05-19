@@ -10,7 +10,7 @@ crazyflie:
 control:
   speed_mps: 0.6
   yaw_rate_dps: 70.0
-  default_height_m: 1.5
+  default_height_m: 0.8
   setpoint_rate_hz: 10
 
 perception:
