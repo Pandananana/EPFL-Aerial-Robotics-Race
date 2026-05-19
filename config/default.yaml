@@ -16,7 +16,7 @@ control:
 perception:
   detector: "yolo_pose" # one of: yolo_pose, yolo_seg, yolo_obb, hough
   conf_threshold: 0.25
-  gate_height_m: 0.48 # inner LED frame height, metres
+  gate_height_m: 0.40 # inner LED frame height, metres
   gate_width_search_m: [0.20, 1.21, 0.01] # arange(start, stop, step)
 
 recording:
