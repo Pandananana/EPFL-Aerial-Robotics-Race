@@ -88,14 +88,14 @@ def parse_args() -> argparse.Namespace:
         help="Directory containing chessboard frames (PNG/JPG/BMP/TIFF).",
     )
     ap.add_argument(
-        "--inner-corners", type=int, nargs=2, default=[6, 8],
+        "--inner-corners", type=int, nargs=2, default=[5, 7],
         metavar=("COLS", "ROWS"),
         help="Inner-corner count (cols rows). A 7x9-square board has 6 8. "
              "Default: 6 8.",
     )
     ap.add_argument(
-        "--square-size", type=float, default=0.021,
-        help="Side length of one square in metres. Default: 0.021 (21 mm).",
+        "--square-size", type=float, default=0.0475,
+        help="Side length of one square in metres. Default: 0.0475 (47.5 mm).",
     )
     ap.add_argument(
         "--model", choices=["rational", "standard", "fisheye"],
