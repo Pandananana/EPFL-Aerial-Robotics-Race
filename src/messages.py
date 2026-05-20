@@ -35,6 +35,7 @@ class DronePose:
     roll: float
     pitch: float
     yaw: float
+    lighthouse_bs_visible: int | None = None
 
 
 @dataclass(frozen=True)

@@ -103,6 +103,10 @@ class ReplayThread(QtCore.QThread):
                 timestamp=t_rec,
                 x=float(r["x"]), y=float(r["y"]), z=float(r["z"]),
                 roll=float(r["roll"]), pitch=float(r["pitch"]), yaw=float(r["yaw"]),
+                lighthouse_bs_visible=(
+                    int(r["lighthouse_bs_visible"])
+                    if r.get("lighthouse_bs_visible") else None
+                ),
             ))
 
             img_path = self._dir / r["image"]

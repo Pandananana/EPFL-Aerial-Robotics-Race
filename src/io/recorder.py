@@ -56,7 +56,10 @@ class Recorder(QtCore.QObject):
         )
         self._csv = csv.writer(self._csv_file)
         self._csv.writerow(
-            ["timestamp", "image", "x", "y", "z", "roll", "pitch", "yaw"]
+            [
+                "timestamp", "image", "x", "y", "z", "roll", "pitch", "yaw",
+                "lighthouse_bs_visible",
+            ]
         )
 
         self._log_file = open(
@@ -75,6 +78,7 @@ class Recorder(QtCore.QObject):
             "roll",
             "pitch",
             "yaw",
+            "lighthouse_bs_visible",
             "waypoint_x",
             "waypoint_y",
             "waypoint_z",
@@ -113,6 +117,7 @@ class Recorder(QtCore.QObject):
             roll=pose.roll,
             pitch=pose.pitch,
             yaw=pose.yaw,
+            lighthouse_bs_visible=pose.lighthouse_bs_visible,
         )
 
     @QtCore.pyqtSlot(object)
@@ -122,11 +127,14 @@ class Recorder(QtCore.QObject):
         cv2.imwrite(os.path.join(self.save_dir, filename), frame.image)
         p = self._pose.get()
         if p is None:
-            row = [frame.timestamp, filename, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            row = [
+                frame.timestamp, filename, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "",
+            ]
         else:
             row = [
                 frame.timestamp, filename,
                 p.x, p.y, p.z, p.roll, p.pitch, p.yaw,
+                "" if p.lighthouse_bs_visible is None else p.lighthouse_bs_visible,
             ]
         self._csv.writerow(row)
         self._csv_file.flush()
@@ -168,6 +176,10 @@ class Recorder(QtCore.QObject):
             gate_widths_m=json.dumps(gate.widths_m),
             gate_reprojection_errors_px=json.dumps(gate.reprojection_errors_px),
             gate_world_centers_m=world_centers or "",
+            lighthouse_bs_visible=(
+                "" if pose is None or pose.lighthouse_bs_visible is None
+                else pose.lighthouse_bs_visible
+            ),
         )
 
     @QtCore.pyqtSlot(object)

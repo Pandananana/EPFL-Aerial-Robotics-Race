@@ -81,11 +81,14 @@ class GateKalman:
         self.Q = np.eye(self.DIM) * process_noise
         self.R = np.eye(self.DIM) * measurement_noise
 
-    def update(self, corners: list[np.ndarray]) -> None:
+    def update(self, corners: list[np.ndarray], measurement_noise: float | None = None) -> None:
         self.P = self.P + self.Q
         z = np.concatenate(corners).astype(float)
         y = z - self.x
-        S = self.P + self.R
+        R = self.R
+        if measurement_noise is not None:
+            R = np.eye(self.DIM) * measurement_noise
+        S = self.P + R
         K = self.P @ np.linalg.inv(S)
         self.x = self.x + K @ y
         self.P = (np.eye(self.DIM) - K) @ self.P
@@ -99,6 +102,8 @@ class GateKalman:
 
 class GateTracker:
     """Per-gate Kalman tracker with the chosen approach-side normal."""
+
+    BASE_MEASUREMENT_NOISE = 0.1
 
     def __init__(self) -> None:
         self.kalman: GateKalman | None = None
@@ -121,6 +126,9 @@ class GateTracker:
         """
         if not gate.corners_cam_m:
             return
+        measurement_noise = self._measurement_noise_for_pose(pose)
+        if measurement_noise is None:
+            return
 
         candidates = [camera_corners_to_world(c, pose) for c in gate.corners_cam_m]
         drone_pos = np.array([pose.x, pose.y, pose.z])
@@ -138,9 +146,9 @@ class GateTracker:
             )
 
         if self.kalman is None:
-            self.kalman = GateKalman(best)
+            self.kalman = GateKalman(best, measurement_noise=measurement_noise)
         else:
-            self.kalman.update(best)
+            self.kalman.update(best, measurement_noise=measurement_noise)
 
     def reset(self) -> None:
         self.kalman = None
@@ -149,6 +157,20 @@ class GateTracker:
     def reset_filter_only(self) -> None:
         """Drop the filter but keep the approach side fixed (used at MEASURE entry)."""
         self.kalman = None
+
+    def _measurement_noise_for_pose(self, pose: DronePose) -> float | None:
+        count = pose.lighthouse_bs_visible
+        if count is None:
+            return self.BASE_MEASUREMENT_NOISE
+        if count <= 1:
+            print(
+                f"[GATE_REJECT] lighthouse base stations visible={count}; need >=2",
+                flush=True,
+            )
+            return None
+        if count >= 3:
+            return self.BASE_MEASUREMENT_NOISE / 5.0
+        return self.BASE_MEASUREMENT_NOISE
 
     def oriented_normal(self) -> np.ndarray | None:
         """Gate normal flipped to align with `approach_normal` when one is set."""

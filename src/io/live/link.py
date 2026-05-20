@@ -21,6 +21,8 @@ from PyQt6 import QtCore
 from src.bus import Latest
 from src.messages import DronePose, Setpoint
 
+LIGHTHOUSE_BS_AVAILABLE = "lighthouse.bsAvailable"
+
 
 class CrazyflieLink(QtCore.QObject):
     pose_ready = QtCore.pyqtSignal(object)  # DronePose
@@ -39,6 +41,7 @@ class CrazyflieLink(QtCore.QObject):
         self._uri = uri
         self._setpoint: Latest[Setpoint] = Latest()
         self._disable_flight = disable_flight
+        self._lighthouse_available_var: str | None = None
 
         cflib.crtp.init_drivers()
         self.cf = Crazyflie(rw_cache=cache_dir)
@@ -92,12 +95,27 @@ class CrazyflieLink(QtCore.QObject):
         lg.add_variable("stabilizer.roll", "float")
         lg.add_variable("stabilizer.pitch", "float")
         lg.add_variable("stabilizer.yaw", "float")
+        if self._has_log_variable(LIGHTHOUSE_BS_AVAILABLE):
+            self._lighthouse_available_var = LIGHTHOUSE_BS_AVAILABLE
+            lg.add_variable(LIGHTHOUSE_BS_AVAILABLE, "uint16_t")
+            print(f"[LIGHTHOUSE] logging {LIGHTHOUSE_BS_AVAILABLE}", flush=True)
+        else:
+            toc = self.cf.log.toc
+            available = sorted(toc.toc.get("lighthouse", {}).keys()) if toc else []
+            print(
+                "[LIGHTHOUSE] lighthouse.bsAvailable not in log TOC; "
+                f"available lighthouse logs: {available}",
+                flush=True,
+            )
         self.cf.log.add_config(lg)
         lg.data_received_cb.add_callback(self._on_log)
         lg.start()
 
     def _on_log(self, timestamp_ms, data, _logconf) -> None:
         import time
+        bs_visible = None
+        if self._lighthouse_available_var is not None:
+            bs_visible = int(data[self._lighthouse_available_var]).bit_count()
         pose = DronePose(
             timestamp=time.time(),
             x=data["stateEstimate.x"],
@@ -106,8 +124,15 @@ class CrazyflieLink(QtCore.QObject):
             roll=data["stabilizer.roll"],
             pitch=data["stabilizer.pitch"],
             yaw=data["stabilizer.yaw"],
+            lighthouse_bs_visible=bs_visible,
         )
         self.pose_ready.emit(pose)
+
+    def _has_log_variable(self, name: str) -> bool:
+        if self.cf.log.toc is None:
+            return False
+        group, var = name.split(".", 1)
+        return self.cf.log.toc.get_element(group, var) is not None
 
     def _send_setpoint(self) -> None:
         sp = self._setpoint.get()
