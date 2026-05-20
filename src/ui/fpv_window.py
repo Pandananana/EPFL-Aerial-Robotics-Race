@@ -26,12 +26,14 @@ class FpvWindow(QtWidgets.QWidget):
 
     SCALE = 2
     FRAME_BUFFER = 16  # frames retained while we wait for matching detections
+    DETECTION_BUFFER = 16
 
     def __init__(self, manual: ManualControl, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent)
         self.setWindowTitle("Crazyflie FPV")
         self._manual = manual
         self._frames: OrderedDict[int, Frame] = OrderedDict()
+        self._detections: OrderedDict[int, GateDetection2D] = OrderedDict()
         self._rgb_buf: np.ndarray | None = None
 
         self.image_label = QtWidgets.QLabel("Waiting for video...")
@@ -49,29 +51,35 @@ class FpvWindow(QtWidgets.QWidget):
         self._frames[frame.seq] = frame
         while len(self._frames) > self.FRAME_BUFFER:
             self._frames.popitem(last=False)
+        det = self._detections.pop(frame.seq, None)
+        self._paint(frame, det)
 
     @QtCore.pyqtSlot(object)
     def on_detection(self, det: GateDetection2D) -> None:
         frame = self._frames.pop(det.frame_seq, None)
         if frame is None:
-            return  # detection arrived after its frame fell out of the buffer
+            self._detections[det.frame_seq] = det
+            while len(self._detections) > self.DETECTION_BUFFER:
+                self._detections.popitem(last=False)
+            return
         # Drop any older buffered frames — they'll never get a detection now.
         for seq in [s for s in self._frames if s < det.frame_seq]:
             del self._frames[seq]
         self._paint(frame, det)
 
-    def _paint(self, frame: Frame, det: GateDetection2D) -> None:
+    def _paint(self, frame: Frame, det: GateDetection2D | None = None) -> None:
         img = frame.image
         h, w = img.shape[:2]
-        if img.ndim == 2:
+        if img.ndim == 2 or (img.ndim == 3 and img.shape[2] == 1):
             rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
         else:
             rgb = cv2.cvtColor(img[:, :, :3], cv2.COLOR_BGR2RGB)
-        for q in det.corners_px:
-            cv2.polylines(
-                rgb, [q.astype(np.int32)],
-                isClosed=True, color=(0, 255, 0), thickness=1, lineType=cv2.LINE_AA,
-            )
+        if det is not None:
+            for q in det.corners_px:
+                cv2.polylines(
+                    rgb, [q.astype(np.int32)],
+                    isClosed=True, color=(0, 255, 0), thickness=1, lineType=cv2.LINE_AA,
+                )
         # Keep a reference so QImage's data isn't freed before paint.
         self._rgb_buf = np.ascontiguousarray(rgb)
         qimg = QtGui.QImage(

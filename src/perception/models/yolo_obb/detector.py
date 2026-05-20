@@ -43,7 +43,7 @@ def predict_gates(image: np.ndarray) -> list[np.ndarray]:
     """
     model = _load_model()
 
-    if image.ndim == 2:
+    if image.ndim == 2 or (image.ndim == 3 and image.shape[2] == 1):
         bgr = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
     else:
         bgr = image

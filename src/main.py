@@ -78,6 +78,7 @@ def build_system(
     video: VideoSource,
     link: DroneLink,
     record: bool = True,
+    threaded_detector: bool = True,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -85,10 +86,12 @@ def build_system(
     # Heavy YOLO inference (~65 ms) runs on its own thread so it doesn't
     # block the control loop. Qt makes the cross-thread signal connection
     # queued automatically.
-    detector_thread = QtCore.QThread()
-    detector_thread.setObjectName("GateDetectorThread")
-    detector.moveToThread(detector_thread)
-    detector_thread.start()
+    detector_thread: QtCore.QThread | None = None
+    if threaded_detector:
+        detector_thread = QtCore.QThread()
+        detector_thread.setObjectName("GateDetectorThread")
+        detector.moveToThread(detector_thread)
+        detector_thread.start()
 
     estimator = PoseEstimator(
         camera_matrix=np.array(cal["camera_matrix"], dtype=np.float64),
@@ -186,6 +189,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Optional gates.csv with true gate poses for the 3D debug plot. "
              "Replay defaults to <recording>/gates.csv when present.",
     )
+    ap.add_argument(
+        "--gate-debug-plot", action="store_true",
+        help="Force the Matplotlib 3D gate debug plot when gate truth is available. "
+             "On Windows this is opt-in because the Qt/Matplotlib/Torch stack can "
+             "crash natively.",
+    )
+    ap.add_argument(
+        "--no-gate-debug-plot", action="store_true",
+        help="Disable the Matplotlib 3D gate debug plot.",
+    )
     return ap.parse_args(argv)
 
 
@@ -218,7 +231,14 @@ def main(argv: list[str] | None = None) -> int:
         record = False
 
     active_cal = cal.get(args.source, cal)
-    sys_ = build_system(cfg, active_cal, video=video, link=link, record=record)
+    sys_ = build_system(
+        cfg,
+        active_cal,
+        video=video,
+        link=link,
+        record=record,
+        threaded_detector=args.source != "replay",
+    )
 
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
@@ -233,8 +253,27 @@ def main(argv: list[str] | None = None) -> int:
         if candidate.exists():
             debug_truth_csv = candidate
 
+    enable_gate_debug_plot = (
+        args.source in {"webots", "replay"}
+        and debug_truth_csv is not None
+        and not args.no_gate_debug_plot
+        and (args.gate_debug_plot or sys.platform != "win32")
+    )
+    if (
+        args.source in {"webots", "replay"}
+        and debug_truth_csv is not None
+        and not enable_gate_debug_plot
+        and sys.platform == "win32"
+        and not args.no_gate_debug_plot
+    ):
+        print(
+            "[GATE_DEBUG] plot disabled by default on Windows; "
+            "pass --gate-debug-plot to force it.",
+            flush=True,
+        )
+
     gate_debug_plotter = None
-    if args.source in {"webots", "replay"} and debug_truth_csv is not None:
+    if enable_gate_debug_plot:
         gate_debug_plotter = GateDebugPlotter(truth_csv=debug_truth_csv)
         sys_["link"].pose_ready.connect(gate_debug_plotter.on_pose)
         sys_["estimator"].gate_ready.connect(gate_debug_plotter.on_gate)
@@ -318,8 +357,9 @@ def main(argv: list[str] | None = None) -> int:
         sys_["link"].close()
         if sys_["recorder"] is not None:
             sys_["recorder"].close()
-        sys_["detector_thread"].quit()
-        sys_["detector_thread"].wait()
+        if sys_["detector_thread"] is not None:
+            sys_["detector_thread"].quit()
+            sys_["detector_thread"].wait()
 
 
 if __name__ == "__main__":

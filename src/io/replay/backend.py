@@ -17,7 +17,8 @@ import csv
 import time
 from pathlib import Path
 
-import cv2
+import numpy as np
+from PIL import Image
 from PyQt6 import QtCore
 
 from src.messages import DronePose, Frame, Setpoint
@@ -106,8 +107,10 @@ class ReplayThread(QtCore.QThread):
             ))
 
             img_path = self._dir / r["image"]
-            img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
-            if img is None:
+            try:
+                with Image.open(img_path) as im:
+                    img = np.asarray(im.convert("L"))
+            except OSError:
                 continue
             seq += 1
             self.frame_ready.emit(Frame(timestamp=t_rec, seq=seq, image=img))
