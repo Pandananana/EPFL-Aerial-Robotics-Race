@@ -1,39 +1,34 @@
 """Entry point: instantiate modules, wire them via Qt signals, and run.
 
     uv run python -m src.main --source live
-    uv run python -m src.main --source webots
+    uv run python -m src.main --source webots --ibvs --autostart
     uv run python -m src.main --source replay --recording data/recordings/<id>
 
 Each backend lives under src/io/<mode>/ and exposes a `build_<mode>(cfg)`
 helper that returns objects satisfying the VideoSource and DroneLink
 protocols in src/io/sources.py. `main` picks one based on --source.
 
-Topology (signal -> slot):
+There are two interchangeable control stacks; `--ibvs` selects the second.
 
-   video.frame_ready -------------+--> Recorder.on_frame  (live only)
-                                  +--> GateDetector.on_frame
-                                  +--> FpvWindow.on_frame
+Default (3D estimator -> Planner -> Controller):
 
-   link.pose_ready ---------------+--> Recorder.on_pose   (live only)
-                                  +--> Planner.on_pose
-                                  +--> Controller.on_pose
-   link.connected ----------------+--> FpvWindow.set_status
-
-   GateDetector.detection_ready --+--> PoseEstimator.on_detection
-                                  +--> FpvWindow.on_detection
+   video.frame_ready -------------+--> GateDetector.on_frame -> FpvWindow / Recorder
+   GateDetector.detection_ready  ---> PoseEstimator.on_detection
    PoseEstimator.gate_ready      ---> Planner.on_gate
+   link.pose_ready ---------------+--> Planner.on_pose / Controller.on_pose
    Planner.waypoint_ready        ---> Controller.on_waypoint
+   Controller.setpoint_ready    ---> link.set_setpoint
 
-   Controller.setpoint_ready ---+--> link.set_setpoint
-   ManualControl.setpoint_ready -+
-   ManualControl.stop_requested ---> link.send_stop
+IBVS (`--ibvs`, image-plane only, no PoseEstimator or Controller):
 
-   FpvWindow key events -> ManualControl.handle_key_press / handle_key_release
+   video.frame_ready             ---> IBVSPlanner.on_frame      (image shape)
+   GateDetector.detection_ready  ---> IBVSPlanner.on_detection  (FSM + control law)
+   link.pose_ready               ---> IBVSPlanner.on_pose       (takeoff only)
+   IBVSPlanner.setpoint_ready    ---> link.set_setpoint
 
-Two setpoint sources (Controller and ManualControl) both feed the link's
-sink; whichever wrote last wins on the next radio tick. Arbitration is
-the controls team's call. In replay mode the link's set_setpoint /
-send_stop are no-ops — there is no drone to command.
+ManualControl always shares the link's setpoint sink with whichever planner
+is active; whichever wrote last wins on the next radio tick. In replay mode
+the link's set_setpoint / send_stop are no-ops.
 """
 
 from __future__ import annotations
@@ -47,6 +42,7 @@ import yaml
 from PyQt6 import QtCore, QtWidgets
 
 from src.control.controller import Controller
+from src.control.ibvs import IBVSPlanner
 from src.control.manual import ManualControl
 from src.control.planner import Planner
 from src.bus import Latest
@@ -77,9 +73,16 @@ def build_system(
     video: VideoSource,
     link: DroneLink,
     record: bool = True,
+    ibvs: bool = False,
+    n_gates: int = Planner.DEFAULT_GATE_COUNT,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
-    the caller can start them and keep them alive."""
+    the caller can start them and keep them alive.
+
+    `ibvs=True` swaps the 3D planner + controller chain for the image-based
+    visual servoing planner, which consumes 2D detections directly and
+    emits Setpoint without ever lifting corners to world coordinates.
+    """
     detector = GateDetector(model_name=cfg["perception"]["detector"])
     # Heavy YOLO inference (~65 ms) runs on its own thread so it doesn't
     # block the control loop. Qt makes the cross-thread signal connection
@@ -89,24 +92,13 @@ def build_system(
     detector.moveToThread(detector_thread)
     detector_thread.start()
 
-    estimator = PoseEstimator(
-        camera_matrix=np.array(cal["camera_matrix"], dtype=np.float64),
-        dist_coeffs=np.array(cal["dist_coeffs"], dtype=np.float64),
-        gate_height_m=cfg["perception"]["gate_height_m"],
-        width_search=tuple(cfg["perception"]["gate_width_search_m"]),
-    )
-    planner = Planner(default_height_m=cfg["control"]["default_height_m"])
-    controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
         speed_mps=cfg["control"]["speed_mps"],
         yaw_rate_dps=cfg["control"]["yaw_rate_dps"],
         default_height_m=cfg["control"]["default_height_m"],
     )
 
-    # IO -> consumers
     video.frame_ready.connect(detector.on_frame)
-    link.pose_ready.connect(planner.on_pose)
-    link.pose_ready.connect(controller.on_pose)
 
     recorder: Recorder | None = None
     if record:
@@ -118,11 +110,54 @@ def build_system(
         link.pose_ready.connect(recorder.on_pose)
         link.connected.connect(recorder.on_connected)
         detector.detection_ready.connect(recorder.on_detection)
+        manual.setpoint_ready.connect(recorder.on_setpoint)
+
+    manual.setpoint_ready.connect(link.set_setpoint)
+    manual.stop_requested.connect(link.send_stop)
+
+    out: dict = {
+        "video": video,
+        "link": link,
+        "recorder": recorder,
+        "detector": detector,
+        "detector_thread": detector_thread,
+        "manual": manual,
+    }
+
+    if ibvs:
+        ibvs_planner = IBVSPlanner(
+            default_height_m=cfg["control"]["default_height_m"],
+            n_gates=n_gates,
+        )
+        video.frame_ready.connect(ibvs_planner.on_frame)
+        link.pose_ready.connect(ibvs_planner.on_pose)
+        detector.detection_ready.connect(ibvs_planner.on_detection)
+        ibvs_planner.setpoint_ready.connect(link.set_setpoint)
+        if recorder is not None:
+            ibvs_planner.setpoint_ready.connect(recorder.on_setpoint)
+            ibvs_planner.phase_changed.connect(recorder.on_state_changed)
+        out["planner"] = ibvs_planner
+        out["estimator"] = None
+        out["controller"] = None
+        return out
+
+    estimator = PoseEstimator(
+        camera_matrix=np.array(cal["camera_matrix"], dtype=np.float64),
+        dist_coeffs=np.array(cal["dist_coeffs"], dtype=np.float64),
+        gate_height_m=cfg["perception"]["gate_height_m"],
+        width_search=tuple(cfg["perception"]["gate_width_search_m"]),
+    )
+    planner = Planner(default_height_m=cfg["control"]["default_height_m"])
+    controller = Controller(default_height_m=cfg["control"]["default_height_m"])
+
+    link.pose_ready.connect(planner.on_pose)
+    link.pose_ready.connect(controller.on_pose)
+
+    if recorder is not None:
         estimator.gate_ready.connect(recorder.on_gate)
         planner.state_changed.connect(recorder.on_state_changed)
         planner.waypoint_ready.connect(recorder.on_waypoint)
         controller.setpoint_ready.connect(recorder.on_setpoint)
-        manual.setpoint_ready.connect(recorder.on_setpoint)
 
     # Perception chain
     detector.detection_ready.connect(estimator.on_detection)
@@ -131,20 +166,11 @@ def build_system(
     # Control chain
     planner.waypoint_ready.connect(controller.on_waypoint)
     controller.setpoint_ready.connect(link.set_setpoint)
-    manual.setpoint_ready.connect(link.set_setpoint)
-    manual.stop_requested.connect(link.send_stop)
 
-    return {
-        "video": video,
-        "link": link,
-        "recorder": recorder,
-        "detector": detector,
-        "detector_thread": detector_thread,
-        "estimator": estimator,
-        "planner": planner,
-        "controller": controller,
-        "manual": manual,
-    }
+    out["estimator"] = estimator
+    out["planner"] = planner
+    out["controller"] = controller
+    return out
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -174,6 +200,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Connect to the AI-deck and Crazyflie for video + pose but never "
              "arm or send setpoints. Use this when recording calibration / "
              "training frames so the drone stays inert in your hand.",
+    )
+    ap.add_argument(
+        "--ibvs", action="store_true",
+        help="Use image-based visual servoing instead of the 3D-estimator "
+             "planner+controller chain. Setpoints are derived directly from "
+             "the locked gate's pixel-space corners.",
+    )
+    ap.add_argument(
+        "--n-gates", type=int, default=Planner.DEFAULT_GATE_COUNT,
+        help="Number of gates the mission expects (used by both planners).",
     )
     return ap.parse_args(argv)
 
@@ -206,59 +242,71 @@ def main(argv: list[str] | None = None) -> int:
         video, link = replay, replay
         record = False
 
-    sys_ = build_system(cfg, cal, video=video, link=link, record=record)
+    sys_ = build_system(
+        cfg, cal, video=video, link=link, record=record,
+        ibvs=args.ibvs, n_gates=args.n_gates,
+    )
 
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
 
-    def print_gate3d(g):
-        if not g.corners_cam_m:
-            print(f"[GATE3D] frame={g.frame_seq} no valid 3D gates", flush=True)
-            return
+    if sys_["estimator"] is not None:
+        def print_gate3d(g):
+            if not g.corners_cam_m:
+                print(f"[GATE3D] frame={g.frame_seq} no valid 3D gates", flush=True)
+                return
 
-        pose = _latest_pose.get()
-        for i, corners in enumerate(g.corners_cam_m):
-            if pose is not None:
-                world_pts = camera_corners_to_world(corners, pose)
-                center = np.mean(world_pts, axis=0)
-                print(
-                    f"[GATE3D] frame={g.frame_seq} gate={i} "
-                    f"world_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}]m "
-                    f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
-                    flush=True,
-                )
-            else:
-                cam_center = corners.mean(axis=0)
-                print(
-                    f"[GATE3D] frame={g.frame_seq} gate={i} "
-                    f"cam_center=[{cam_center[0]:+.2f}, {cam_center[1]:+.2f}, {cam_center[2]:+.2f}]m "
-                    f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
-                    flush=True,
-                )
+            pose = _latest_pose.get()
+            for i, corners in enumerate(g.corners_cam_m):
+                if pose is not None:
+                    world_pts = camera_corners_to_world(corners, pose)
+                    center = np.mean(world_pts, axis=0)
+                    print(
+                        f"[GATE3D] frame={g.frame_seq} gate={i} "
+                        f"world_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}]m "
+                        f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
+                        flush=True,
+                    )
+                else:
+                    cam_center = corners.mean(axis=0)
+                    print(
+                        f"[GATE3D] frame={g.frame_seq} gate={i} "
+                        f"cam_center=[{cam_center[0]:+.2f}, {cam_center[1]:+.2f}, {cam_center[2]:+.2f}]m "
+                        f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
+                        flush=True,
+                    )
 
-    sys_["estimator"].gate_ready.connect(print_gate3d)
+        sys_["estimator"].gate_ready.connect(print_gate3d)
 
-    if args.source == "replay":
-        debug_tracker = GateTracker()
-        debug_poses = {}
-        sys_["link"].pose_ready.connect(lambda p: debug_poses.__setitem__(p.timestamp, p))
+        if args.source == "replay":
+            debug_tracker = GateTracker()
+            debug_poses = {}
+            sys_["link"].pose_ready.connect(lambda p: debug_poses.__setitem__(p.timestamp, p))
 
-        def update_debug_tracker(g):
-            pose = debug_poses.get(g.timestamp)
-            if pose is not None:
-                print(
-                    f"[POSE_DEBUG] frame={g.frame_seq} "
-                    f"pos=[{pose.x:+.2f}, {pose.y:+.2f}, {pose.z:+.2f}]m "
-                    f"rpy=[{pose.roll:+.1f}, {pose.pitch:+.1f}, {pose.yaw:+.1f}]deg",
-                    flush=True,
-                )
-                debug_tracker.update(g, pose)
+            def update_debug_tracker(g):
+                pose = debug_poses.get(g.timestamp)
+                if pose is not None:
+                    print(
+                        f"[POSE_DEBUG] frame={g.frame_seq} "
+                        f"pos=[{pose.x:+.2f}, {pose.y:+.2f}, {pose.z:+.2f}]m "
+                        f"rpy=[{pose.roll:+.1f}, {pose.pitch:+.1f}, {pose.yaw:+.1f}]deg",
+                        flush=True,
+                    )
+                    debug_tracker.update(g, pose)
 
-        sys_["estimator"].gate_ready.connect(update_debug_tracker)
+            sys_["estimator"].gate_ready.connect(update_debug_tracker)
 
-    sys_["planner"].state_changed.connect(
-        lambda name: print(f"[FSM] -> {name}", flush=True)
-    )
+    if args.ibvs:
+        sys_["planner"].phase_changed.connect(
+            lambda name: print(f"[IBVS] -> {name}", flush=True)
+        )
+        sys_["planner"].locked_track_changed.connect(
+            lambda tid: print(f"[IBVS] locked track = {tid}", flush=True)
+        )
+    else:
+        sys_["planner"].state_changed.connect(
+            lambda name: print(f"[FSM] -> {name}", flush=True)
+        )
     sys_["planner"].mission_done.connect(
         lambda: print("[FSM] mission done", flush=True)
     )
