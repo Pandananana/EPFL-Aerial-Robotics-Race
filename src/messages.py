@@ -82,6 +82,23 @@ class Waypoint:
 
 
 @dataclass(frozen=True)
+class GateEstimate:
+    """Final Kalman-filtered estimate for one gate, in world frame.
+
+    Matches the gates.csv schema so estimates can be saved directly.
+    theta_rad is the gate-normal yaw (atan2 of the oriented normal).
+    width_m / height_m are derived from the filtered corner positions.
+    """
+    gate_num: int
+    x: float
+    y: float
+    z: float
+    theta_rad: float
+    width_m: float
+    height_m: float
+
+
+@dataclass(frozen=True)
 class Setpoint:
     """Desired hover-commander setpoint, in the cflib send_hover_setpoint format.
 

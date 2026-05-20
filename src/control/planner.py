@@ -25,16 +25,17 @@ from src.bus import Latest
 from src.control.states.base import Context, State
 from src.control.states.gate_tracker import GateTracker
 from src.control.states.takeoff import TakeoffState
-from src.messages import DronePose, Gate3D
+from src.messages import DronePose, Gate3D, GateEstimate
 
 logger = logging.getLogger(__name__)
 
 
 class Planner(QtCore.QObject):
-    waypoint_ready = QtCore.pyqtSignal(object)   # Waypoint
-    mission_done = QtCore.pyqtSignal()           # fires once after landing
-    state_changed = QtCore.pyqtSignal(str)       # state class name
+    waypoint_ready = QtCore.pyqtSignal(object)        # Waypoint
+    mission_done = QtCore.pyqtSignal()               # fires once after landing
+    state_changed = QtCore.pyqtSignal(str)           # state class name
     gate_estimate_ready = QtCore.pyqtSignal(object)  # current Kalman gate corners
+    gate_estimated = QtCore.pyqtSignal(object)       # GateEstimate, once per measured gate
 
     DEFAULT_GATE_COUNT = 5
 
@@ -115,4 +116,5 @@ class Planner(QtCore.QObject):
             takeoff_height_m=self._takeoff_height_m,
             emit_waypoint=self.waypoint_ready.emit,
             notify_mission_done=self.mission_done.emit,
+            notify_gate_estimated=self.gate_estimated.emit,
         )

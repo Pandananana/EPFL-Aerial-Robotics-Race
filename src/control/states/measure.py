@@ -14,7 +14,7 @@ import math
 import numpy as np
 
 from src.control.states.base import Context, State
-from src.messages import Gate3D
+from src.messages import Gate3D, GateEstimate
 
 logger = logging.getLogger(__name__)
 
@@ -58,5 +58,25 @@ class MeasureState(State):
         pass_yaw = math.atan2(direction[1], direction[0])
 
         logger.info("Pass-through target %s yaw=%.1f deg", np.round(pass_target, 2), math.degrees(pass_yaw))
+        self._emit_estimate(ctx)
         from src.control.states.pass_through import PassThroughState
         return PassThroughState(pass_target, pass_yaw)
+
+    def _emit_estimate(self, ctx: Context) -> None:
+        if ctx.tracker.kalman is None:
+            return
+        corners = ctx.tracker.kalman.corners()
+        center = ctx.tracker.kalman.center()
+        normal = ctx.tracker.oriented_normal()
+        theta = math.atan2(normal[1], normal[0]) if normal is not None else 0.0
+        width = float(np.linalg.norm(corners[1] - corners[0]))
+        height = float(np.linalg.norm(corners[3] - corners[0]))
+        ctx.notify_gate_estimated(GateEstimate(
+            gate_num=ctx.gates_done + 1,
+            x=float(center[0]),
+            y=float(center[1]),
+            z=float(center[2]),
+            theta_rad=theta,
+            width_m=width,
+            height_m=height,
+        ))

@@ -20,7 +20,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from src.messages import DronePose, Gate3D, Waypoint
+from src.messages import DronePose, Gate3D, GateEstimate, Waypoint
 
 if TYPE_CHECKING:
     from src.control.states.gate_tracker import GateTracker
@@ -39,6 +39,7 @@ class Context:
     takeoff_height_m: float
     emit_waypoint: Callable[[Waypoint], None]
     notify_mission_done: Callable[[], None]
+    notify_gate_estimated: Callable[["GateEstimate"], None]
 
     def emit(
         self,

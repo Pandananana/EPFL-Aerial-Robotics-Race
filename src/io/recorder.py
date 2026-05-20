@@ -34,6 +34,7 @@ from src.messages import (
     Frame,
     Gate3D,
     GateDetection2D,
+    GateEstimate,
     Setpoint,
     Waypoint,
 )
@@ -94,6 +95,7 @@ class Recorder(QtCore.QObject):
         self._log.writeheader()
 
         self._pose: Latest[DronePose] = Latest()
+        self._gate_estimates: list[GateEstimate] = []
         self._state = "IDLE"
         self._count = 0
         self._log_every_n = max(1, int(pose_log_every_n))
@@ -204,6 +206,16 @@ class Recorder(QtCore.QObject):
             return
         self._write_log(event="setpoint")
 
+    @QtCore.pyqtSlot(object)
+    def on_gate_estimated(self, est: GateEstimate) -> None:
+        self._gate_estimates.append(est)
+        self._write_log(
+            event="gate_estimated",
+            message=f"gate={est.gate_num} x={est.x:.3f} y={est.y:.3f} z={est.z:.3f} "
+                    f"theta={est.theta_rad:.4f} w={est.width_m:.3f} h={est.height_m:.3f}",
+        )
+        self._save_gates_csv()
+
     @QtCore.pyqtSlot(str)
     def on_connected(self, status: str) -> None:
         self._write_log(event="connected", message=status)
@@ -217,6 +229,23 @@ class Recorder(QtCore.QObject):
     @property
     def frame_count(self) -> int:
         return self._count
+
+    def _save_gates_csv(self) -> None:
+        path = os.path.join(self.save_dir, "gates_estimates.csv")
+        with open(path, "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["Gate", "x", "y", "z", "theta", "width", "height"])
+            for est in self._gate_estimates:
+                w.writerow([
+                    est.gate_num,
+                    round(est.x, 4),
+                    round(est.y, 4),
+                    round(est.z, 4),
+                    round(est.theta_rad, 4),
+                    round(est.width_m, 4),
+                    round(est.height_m, 4),
+                ])
+        print(f"Saved gate estimates to {path}", flush=True)
 
     def _write_log(self, **values: object) -> None:
         row = {field: "" for field in self._log_fields}
