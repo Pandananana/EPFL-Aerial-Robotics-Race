@@ -35,6 +35,7 @@ class DronePose:
     roll: float
     pitch: float
     yaw: float
+    lighthouse_bs_visible: int | None = None
 
 
 @dataclass(frozen=True)
@@ -70,7 +71,10 @@ class Waypoint:
 
     x, y, z metres; yaw degrees. `max_speed_mps` caps how fast the controller
     may drive toward this waypoint — used to differentiate cautious recon
-    flying from fast race laps.
+    flying from fast race laps. `vx_ff, vy_ff` are an optional world-frame
+    velocity feedforward (m/s); set by trajectory-following states (race) so
+    the controller doesn't lag and cut curves. Stationary targets leave them
+    zero.
     """
     timestamp: float
     x: float
@@ -78,6 +82,25 @@ class Waypoint:
     z: float
     yaw: float
     max_speed_mps: float
+    vx_ff: float = 0.0
+    vy_ff: float = 0.0
+
+
+@dataclass(frozen=True)
+class GateEstimate:
+    """Final Kalman-filtered estimate for one gate, in world frame.
+
+    Matches the gates.csv schema so estimates can be saved directly.
+    theta_rad is the gate-normal yaw (atan2 of the oriented normal).
+    width_m / height_m are derived from the filtered corner positions.
+    """
+    gate_num: int
+    x: float
+    y: float
+    z: float
+    theta_rad: float
+    width_m: float
+    height_m: float
 
 
 @dataclass(frozen=True)

@@ -4,7 +4,8 @@ No detection consumption here on purpose: once we're committed, we trust
 the previous measurement rather than letting a partial detection of the
 gate frame as we fly into it perturb the target. After reaching the target
 we bump `gates_done`, reset the tracker, and either loop back to search
-for the next gate or hand off to return-home if we've cleared all of them.
+for the next gate or hand off into the post-recon chain (save gates,
+re-takeoff, race, return-home, land) if we've cleared all of them.
 """
 
 from __future__ import annotations
@@ -37,8 +38,30 @@ class PassThroughState(State):
         logger.info("Gate %d/%d cleared", ctx.gates_done, ctx.n_gates)
         ctx.tracker.reset()
 
-        if ctx.gates_done >= ctx.n_gates:
-            from src.control.states.return_home import ReturnHomeState
+        if ctx.gates_done < ctx.n_gates:
+            from src.control.states.search import SearchState
+            return SearchState()
+
+        # Recon lap complete. Build the post-recon chain:
+        #   ReturnHome -> Land (intermediate, motors stay armed)
+        #            -> SaveGates (writes CSV, holds briefly)
+        #            -> Takeoff   (back to recon altitude)
+        #            -> Race      (polynomial lap)
+        #            -> ReturnHome -> Land (terminal, mission_done)
+        from src.control.states.race import RaceState
+        from src.control.states.return_home import ReturnHomeState
+        from src.control.states.save_gates import SaveGatesState
+        from src.control.states.takeoff import TakeoffState
+
+        race_gates = list(ctx.tracker.recorded_gates)
+        if not race_gates:
+            logger.warning("Recon complete but no gates were recorded; landing terminally")
             return ReturnHomeState()
-        from src.control.states.search import SearchState
-        return SearchState()
+
+        race = RaceState(race_gates)
+        save = SaveGatesState(
+            gates=race_gates,
+            save_path=ctx.gates_save_path,
+            then=TakeoffState(then=race),
+        )
+        return ReturnHomeState(then_after_land=save)

@@ -34,6 +34,7 @@ from src.messages import (
     Frame,
     Gate3D,
     GateDetection2D,
+    GateEstimate,
     Setpoint,
     Waypoint,
 )
@@ -56,7 +57,10 @@ class Recorder(QtCore.QObject):
         )
         self._csv = csv.writer(self._csv_file)
         self._csv.writerow(
-            ["timestamp", "image", "x", "y", "z", "roll", "pitch", "yaw"]
+            [
+                "timestamp", "image", "x", "y", "z", "roll", "pitch", "yaw",
+                "lighthouse_bs_visible",
+            ]
         )
 
         self._log_file = open(
@@ -75,6 +79,7 @@ class Recorder(QtCore.QObject):
             "roll",
             "pitch",
             "yaw",
+            "lighthouse_bs_visible",
             "waypoint_x",
             "waypoint_y",
             "waypoint_z",
@@ -90,6 +95,7 @@ class Recorder(QtCore.QObject):
         self._log.writeheader()
 
         self._pose: Latest[DronePose] = Latest()
+        self._gate_estimates: list[GateEstimate] = []
         self._state = "IDLE"
         self._count = 0
         self._log_every_n = max(1, int(pose_log_every_n))
@@ -113,6 +119,7 @@ class Recorder(QtCore.QObject):
             roll=pose.roll,
             pitch=pose.pitch,
             yaw=pose.yaw,
+            lighthouse_bs_visible=pose.lighthouse_bs_visible,
         )
 
     @QtCore.pyqtSlot(object)
@@ -122,11 +129,14 @@ class Recorder(QtCore.QObject):
         cv2.imwrite(os.path.join(self.save_dir, filename), frame.image)
         p = self._pose.get()
         if p is None:
-            row = [frame.timestamp, filename, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+            row = [
+                frame.timestamp, filename, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "",
+            ]
         else:
             row = [
                 frame.timestamp, filename,
                 p.x, p.y, p.z, p.roll, p.pitch, p.yaw,
+                "" if p.lighthouse_bs_visible is None else p.lighthouse_bs_visible,
             ]
         self._csv.writerow(row)
         self._csv_file.flush()
@@ -168,6 +178,10 @@ class Recorder(QtCore.QObject):
             gate_widths_m=json.dumps(gate.widths_m),
             gate_reprojection_errors_px=json.dumps(gate.reprojection_errors_px),
             gate_world_centers_m=world_centers or "",
+            lighthouse_bs_visible=(
+                "" if pose is None or pose.lighthouse_bs_visible is None
+                else pose.lighthouse_bs_visible
+            ),
         )
 
     @QtCore.pyqtSlot(object)
@@ -192,6 +206,16 @@ class Recorder(QtCore.QObject):
             return
         self._write_log(event="setpoint")
 
+    @QtCore.pyqtSlot(object)
+    def on_gate_estimated(self, est: GateEstimate) -> None:
+        self._gate_estimates.append(est)
+        self._write_log(
+            event="gate_estimated",
+            message=f"gate={est.gate_num} x={est.x:.3f} y={est.y:.3f} z={est.z:.3f} "
+                    f"theta={est.theta_rad:.4f} w={est.width_m:.3f} h={est.height_m:.3f}",
+        )
+        self._save_gates_csv()
+
     @QtCore.pyqtSlot(str)
     def on_connected(self, status: str) -> None:
         self._write_log(event="connected", message=status)
@@ -205,6 +229,23 @@ class Recorder(QtCore.QObject):
     @property
     def frame_count(self) -> int:
         return self._count
+
+    def _save_gates_csv(self) -> None:
+        path = os.path.join(self.save_dir, "gates_estimates.csv")
+        with open(path, "w", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["Gate", "x", "y", "z", "theta", "width", "height"])
+            for est in self._gate_estimates:
+                w.writerow([
+                    est.gate_num,
+                    round(est.x, 4),
+                    round(est.y, 4),
+                    round(est.z, 4),
+                    round(est.theta_rad, 4),
+                    round(est.width_m, 4),
+                    round(est.height_m, 4),
+                ])
+        print(f"Saved gate estimates to {path}", flush=True)
 
     def _write_log(self, **values: object) -> None:
         row = {field: "" for field in self._log_fields}

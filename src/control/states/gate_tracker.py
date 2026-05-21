@@ -14,6 +14,7 @@ import math
 
 import numpy as np
 
+from src.control.gates_csv import RecordedGate
 from src.messages import DronePose, Gate3D
 
 
@@ -81,11 +82,14 @@ class GateKalman:
         self.Q = np.eye(self.DIM) * process_noise
         self.R = np.eye(self.DIM) * measurement_noise
 
-    def update(self, corners: list[np.ndarray]) -> None:
+    def update(self, corners: list[np.ndarray], measurement_noise: float | None = None) -> None:
         self.P = self.P + self.Q
         z = np.concatenate(corners).astype(float)
         y = z - self.x
-        S = self.P + self.R
+        R = self.R
+        if measurement_noise is not None:
+            R = np.eye(self.DIM) * measurement_noise
+        S = self.P + R
         K = self.P @ np.linalg.inv(S)
         self.x = self.x + K @ y
         self.P = (np.eye(self.DIM) - K) @ self.P
@@ -100,12 +104,18 @@ class GateKalman:
 class GateTracker:
     """Per-gate Kalman tracker with the chosen approach-side normal."""
 
+    BASE_MEASUREMENT_NOISE = 0.1
+
     def __init__(self) -> None:
         self.kalman: GateKalman | None = None
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
         # subsequent normal computations from flipping orientation mid-flight.
         self.approach_normal: np.ndarray | None = None
+        # Snapshot of each gate after its measurement state holds it still.
+        # Survives `reset()` between gates so the planner can hand the list off
+        # to the racing trajectory and the CSV writer at end-of-recon.
+        self.recorded_gates: list[RecordedGate] = []
 
     @property
     def has_estimate(self) -> bool:
@@ -120,6 +130,9 @@ class GateTracker:
         closest to the drone (the next one we'd actually fly toward).
         """
         if not gate.corners_cam_m:
+            return
+        measurement_noise = self._measurement_noise_for_pose(pose)
+        if measurement_noise is None:
             return
 
         candidates = [camera_corners_to_world(c, pose) for c in gate.corners_cam_m]
@@ -138,9 +151,9 @@ class GateTracker:
             )
 
         if self.kalman is None:
-            self.kalman = GateKalman(best)
+            self.kalman = GateKalman(best, measurement_noise=measurement_noise)
         else:
-            self.kalman.update(best)
+            self.kalman.update(best, measurement_noise=measurement_noise)
 
     def reset(self) -> None:
         self.kalman = None
@@ -149,6 +162,42 @@ class GateTracker:
     def reset_filter_only(self) -> None:
         """Drop the filter but keep the approach side fixed (used at MEASURE entry)."""
         self.kalman = None
+
+    def record_current_gate(self) -> RecordedGate | None:
+        """Snapshot the current filter estimate into `recorded_gates`.
+
+        Called by MeasureState after the hold has converged. Returns the
+        appended record (or None when the filter / approach normal aren't
+        ready).
+        """
+        if self.kalman is None or self.approach_normal is None:
+            return None
+        corners = self.kalman.corners()
+        tl, tr, br, bl = corners
+        width = (float(np.linalg.norm(tr - tl)) + float(np.linalg.norm(br - bl))) / 2.0
+        height = (float(np.linalg.norm(bl - tl)) + float(np.linalg.norm(br - tr))) / 2.0
+        rec = RecordedGate(
+            center=self.kalman.center().copy(),
+            normal=self.approach_normal.copy(),
+            width_m=width,
+            height_m=height,
+        )
+        self.recorded_gates.append(rec)
+        return rec
+
+    def _measurement_noise_for_pose(self, pose: DronePose) -> float | None:
+        count = pose.lighthouse_bs_visible
+        if count is None:
+            return self.BASE_MEASUREMENT_NOISE
+        if count <= 1:
+            print(
+                f"[GATE_REJECT] lighthouse base stations visible={count}; need >=2",
+                flush=True,
+            )
+            return None
+        if count >= 3:
+            return self.BASE_MEASUREMENT_NOISE / 5.0
+        return self.BASE_MEASUREMENT_NOISE
 
     def oriented_normal(self) -> np.ndarray | None:
         """Gate normal flipped to align with `approach_normal` when one is set."""
