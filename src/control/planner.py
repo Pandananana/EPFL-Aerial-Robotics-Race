@@ -44,7 +44,6 @@ class Planner(QtCore.QObject):
     gate_estimate_ready = QtCore.pyqtSignal(object)  # current Kalman gate corners
 
     DEFAULT_GATE_COUNT = 5
-    DEFAULT_NUM_RACE_LAPS = 2
 
     def __init__(
         self,
@@ -53,7 +52,6 @@ class Planner(QtCore.QObject):
         n_gates: int = DEFAULT_GATE_COUNT,
         preloaded_gates: list[RecordedGate] | None = None,
         gates_save_path: Path | None = None,
-        num_race_laps: int = DEFAULT_NUM_RACE_LAPS,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
@@ -62,7 +60,6 @@ class Planner(QtCore.QObject):
         self._n_gates = n_gates
         self._preloaded_gates = list(preloaded_gates) if preloaded_gates else None
         self._gates_save_path = Path(gates_save_path) if gates_save_path is not None else None
-        self._num_race_laps = int(num_race_laps)
 
         self._state: State | None = None
         self._tracker = GateTracker()
@@ -83,17 +80,17 @@ class Planner(QtCore.QObject):
         self._start_y = None
         self._start_yaw_rad = None
         if self._preloaded_gates:
-            race = RaceState(self._preloaded_gates, num_laps=self._num_race_laps)
+            race = RaceState(self._preloaded_gates)
             self._state = TakeoffState(then=race)
             logger.info(
-                "Mission start (race-only, %d preloaded gates, %d laps)",
-                len(self._preloaded_gates), self._num_race_laps,
+                "Mission start (race-only, %d preloaded gates)",
+                len(self._preloaded_gates),
             )
         else:
             self._state = TakeoffState()
             logger.info(
-                "Mission start (full: recon %d gates -> race %d laps)",
-                self._n_gates, self._num_race_laps,
+                "Mission start (full: recon %d gates -> race)",
+                self._n_gates,
             )
         self.state_changed.emit(type(self._state).__name__)
 
@@ -142,5 +139,4 @@ class Planner(QtCore.QObject):
             emit_waypoint=self.waypoint_ready.emit,
             notify_mission_done=self.mission_done.emit,
             gates_save_path=self._gates_save_path,
-            num_race_laps=self._num_race_laps,
         )

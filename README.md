@@ -49,16 +49,20 @@ One entry point, three IO backends — chosen by `--source`:
 
 ```bash
 make live                                # AI-deck + Crazyflie over radio
-make webots                              # headless Webots sim (--autostart)
+make webots                              # headless Webots sim
 make replay REC=data/recordings/<id>     # play back a recording, perception only
+make no-fly                              # live IO with arming + setpoints disabled
+make race GATES=data/gates/<file>.csv    # race-only: skip recon, fly the supplied gates
 ```
 
 Equivalent without `make`:
 
 ```bash
 uv run python -m src.main --source live
-uv run python -m src.main --source webots --autostart
+uv run python -m src.main --source webots
 uv run python -m src.main --source replay --recording data/recordings/<id> [--speed 1.0]
+uv run python -m src.main --source live --no-fly
+uv run python -m src.main --source live --race-only --true-gates data/gates/<file>.csv
 ```
 
 ## Labels and training data

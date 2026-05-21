@@ -40,17 +40,18 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
 import yaml
 from PyQt6 import QtCore, QtWidgets
 
+from src.bus import Latest
 from src.control.controller import Controller
 from src.control.gates_csv import load_gates_csv
 from src.control.manual import ManualControl
 from src.control.planner import Planner
-from src.bus import Latest
 from src.control.states.gate_tracker import GateTracker, camera_corners_to_world
 from src.io.live import build_live
 from src.io.recorder import Recorder
@@ -59,8 +60,8 @@ from src.io.sources import DroneLink, VideoSource
 from src.io.webots import build_webots
 from src.perception.gate_detector import GateDetector
 from src.perception.pose_estimator import PoseEstimator
-from src.ui.gate_debug_plot import GateDebugPlotter
 from src.ui.fpv_window import FpvWindow
+from src.ui.gate_debug_plot import GateDebugPlotter
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -81,7 +82,6 @@ def build_system(
     record: bool = True,
     preloaded_gates=None,
     gates_save_path: Path | None = None,
-    num_race_laps: int = Planner.DEFAULT_NUM_RACE_LAPS,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -104,7 +104,6 @@ def build_system(
         default_height_m=cfg["control"]["default_height_m"],
         preloaded_gates=preloaded_gates,
         gates_save_path=gates_save_path,
-        num_race_laps=num_race_laps,
     )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
@@ -179,37 +178,29 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "emitting each recorded pose/frame row.",
     )
     ap.add_argument(
-        "--autostart", action="store_true",
-        help="Kick off the autonomous mission (takeoff -> recon -> race -> land) "
-             "as soon as the drone link is connected. Off by default so manual "
-             "control stays in charge.",
-    )
-    ap.add_argument(
         "--no-fly", action="store_true",
         help="Connect to the AI-deck and Crazyflie for video + pose but never "
              "arm or send setpoints. Use this when recording calibration / "
-             "training frames so the drone stays inert in your hand.",
+             "training frames so the drone stays inert in your hand. Also "
+             "suppresses the autonomous mission.",
     )
     ap.add_argument(
-        "--gate-truth-csv", type=Path, default=None,
-        help="Optional gates.csv with true gate poses for the 3D debug plot. "
-             "Replay defaults to <recording>/gates.csv when present.",
+        "--true-gates", type=Path, default=None,
+        help="Ground-truth gates.csv. Feeds the 3D debug plot in replay/webots, "
+             "and — with --race-only — is also loaded as the preloaded gate set. "
+             "Replay/webots fall back to <recording>/gates.csv or "
+             "data/webots_gates.csv for the debug plot when this is omitted.",
     )
     ap.add_argument(
-        "--gates-csv", type=Path, default=None,
-        help="Preload gate poses from a CSV (same format as data/recordings/<id>"
-             "/gates.csv). With this set, the mission skips the recon lap and "
-             "drops straight from takeoff into the racing trajectory.",
+        "--race-only", action="store_true",
+        help="Skip the recon lap and drop straight from takeoff into the racing "
+             "trajectory, using the gates loaded from --true-gates. Requires "
+             "--true-gates.",
     )
     ap.add_argument(
-        "--gates-save-path", type=Path, default=Path("data/gates_latest.csv"),
-        help="Where the full-mode mission writes the measured gates.csv after "
-             "the recon lap lands. Subsequent --gates-csv runs can read it back.",
-    )
-    ap.add_argument(
-        "--num-race-laps", type=int, default=Planner.DEFAULT_NUM_RACE_LAPS,
-        help="Number of race laps after the recon lap (or right after takeoff "
-             "in --gates-csv mode).",
+        "--debug", action="store_true",
+        help="Open the 3D gate-debug viewer (true vs. measured gates). Needs a "
+             "truth source — either --true-gates or the replay/webots fallback.",
     )
     return ap.parse_args(argv)
 
@@ -219,14 +210,14 @@ def main(argv: list[str] | None = None) -> int:
     cfg, cal = load_config()
     app = QtWidgets.QApplication(sys.argv[:1])
 
+    if args.race_only and args.true_gates is None:
+        raise SystemExit("--race-only requires --true-gates <csv>")
+
     if args.source == "live":
         video, link = build_live(cfg, no_fly=args.no_fly)
         record = True
         if args.no_fly:
             print("[main] --no-fly: arming + setpoints disabled; video/pose only.")
-            if args.autostart:
-                print("[main] --no-fly overrides --autostart; mission will not run.")
-                args.autostart = False
     elif args.source == "webots":
         backend = build_webots(cfg)
         video, link = backend, backend
@@ -243,27 +234,31 @@ def main(argv: list[str] | None = None) -> int:
         record = False
 
     preloaded_gates = None
-    if args.gates_csv is not None:
-        preloaded_gates = load_gates_csv(args.gates_csv)
+    if args.race_only:
+        preloaded_gates = load_gates_csv(args.true_gates)
         print(
             f"[main] race-only mode: loaded {len(preloaded_gates)} gates from "
-            f"{args.gates_csv}",
+            f"{args.true_gates}",
             flush=True,
         )
+
+    gates_save_path = (
+        REPO_ROOT / "data" / "gates" / "estimated"
+        / f"{datetime.now().strftime('%Y-%m-%d_%H-%M')}.csv"
+    )
 
     active_cal = cal.get(args.source, cal)
     sys_ = build_system(
         cfg, active_cal,
         video=video, link=link, record=record,
         preloaded_gates=preloaded_gates,
-        gates_save_path=args.gates_save_path,
-        num_race_laps=args.num_race_laps,
+        gates_save_path=gates_save_path,
     )
 
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
 
-    debug_truth_csv = args.gate_truth_csv
+    debug_truth_csv = args.true_gates
     if debug_truth_csv is None and args.source == "replay" and args.recording is not None:
         candidate = args.recording / "gates.csv"
         if candidate.exists():
@@ -274,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
             debug_truth_csv = candidate
 
     gate_debug_plotter = None
-    if args.source in {"webots", "replay"} and debug_truth_csv is not None:
+    if args.debug and debug_truth_csv is not None:
         gate_debug_plotter = GateDebugPlotter(truth_csv=debug_truth_csv)
         sys_["link"].pose_ready.connect(gate_debug_plotter.on_pose)
         sys_["estimator"].gate_ready.connect(gate_debug_plotter.on_gate)
@@ -335,10 +330,10 @@ def main(argv: list[str] | None = None) -> int:
         lambda: print("[FSM] mission done", flush=True)
     )
 
-    if args.autostart:
+    # Autonomous mission starts as soon as the link is up. --no-fly is the
+    # opt-out — used when the drone is being held for calibration / recording.
+    if not (args.source == "live" and args.no_fly):
         sys_["link"].connected.connect(lambda _s: sys_["planner"].start())
-    # Cut motors once the FSM reaches the terminal state — regardless of
-    # whether the mission was autostarted or kicked off manually later.
     sys_["planner"].mission_done.connect(sys_["link"].send_stop)
 
     win = FpvWindow(sys_["manual"])

@@ -58,7 +58,7 @@ class PassThroughState(State):
             logger.warning("Recon complete but no gates were recorded; landing terminally")
             return ReturnHomeState()
 
-        race = RaceState(race_gates, num_laps=ctx.num_race_laps)
+        race = RaceState(race_gates)
         save = SaveGatesState(
             gates=race_gates,
             save_path=ctx.gates_save_path,
