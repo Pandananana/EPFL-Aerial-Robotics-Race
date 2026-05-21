@@ -1,4 +1,4 @@
-.PHONY: live webots replay no-fly race
+.PHONY: live webots replay no-fly race measure
 
 live:
 	uv run python -m src.main --source live
@@ -20,3 +20,6 @@ race:
 race-webots:
 	@if [ -z "$(GATES)" ]; then echo "usage: make race-webots GATES=data/gates/<file>.csv"; exit 2; fi
 	uv run python -m src.main --source webots --race-only --true-gates $(GATES)
+
+measure:
+	uv run python -m scripts.measure_gates
