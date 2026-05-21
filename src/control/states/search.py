@@ -32,6 +32,7 @@ class SearchState(State):
 
     def __init__(self) -> None:
         self._yaw_target_rad: float | None = None
+        self._z_m: float | None = None
 
     def on_gate(self, ctx: Context, gate: Gate3D) -> None:
         ctx.tracker.update(gate, ctx.pose)
@@ -42,6 +43,9 @@ class SearchState(State):
             if transition is not None:
                 return transition
 
+        if self._z_m is None:
+            self._z_m = ctx.pose.z
+
         current_yaw = math.radians(ctx.pose.yaw)
         if self._yaw_target_rad is None:
             self._yaw_target_rad = current_yaw + self.YAW_STEP_RAD
@@ -49,7 +53,7 @@ class SearchState(State):
             self._yaw_target_rad = current_yaw + self.YAW_STEP_RAD
 
         ctx.emit(
-            ctx.pose.x, ctx.pose.y, ctx.takeoff_height_m,
+            ctx.pose.x, ctx.pose.y, self._z_m,
             self._yaw_target_rad, self.SEARCH_SPEED_MPS,
         )
         return None
