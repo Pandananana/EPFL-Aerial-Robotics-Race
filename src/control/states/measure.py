@@ -23,6 +23,7 @@ class MeasureState(State):
     HOLD_S = 2.0
     PASS_OVERSHOOT_M = 0.4
     MEASURE_SPEED_MPS = 0.3
+    MIN_ESTIMATES_BEFORE_PASS = 5
 
     def __init__(self, hold_pos: np.ndarray, hold_yaw_rad: float) -> None:
         self._pos = hold_pos.copy()
@@ -43,7 +44,11 @@ class MeasureState(State):
 
         ctx.emit(self._pos[0], self._pos[1], self._pos[2], self._yaw, self.MEASURE_SPEED_MPS)
 
-        if ctx.pose.timestamp - self._start_t < self.HOLD_S or not ctx.tracker.has_estimate:
+        if (
+            ctx.pose.timestamp - self._start_t < self.HOLD_S
+            or not ctx.tracker.has_estimate
+            or ctx.tracker.estimate_count < self.MIN_ESTIMATES_BEFORE_PASS
+        ):
             return None
 
         assert ctx.tracker.kalman is not None

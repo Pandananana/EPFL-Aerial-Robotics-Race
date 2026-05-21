@@ -108,6 +108,7 @@ class GateTracker:
 
     def __init__(self) -> None:
         self.kalman: GateKalman | None = None
+        self.estimate_count = 0
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
         # subsequent normal computations from flipping orientation mid-flight.
@@ -154,14 +155,17 @@ class GateTracker:
             self.kalman = GateKalman(best, measurement_noise=measurement_noise)
         else:
             self.kalman.update(best, measurement_noise=measurement_noise)
+        self.estimate_count += 1
 
     def reset(self) -> None:
         self.kalman = None
+        self.estimate_count = 0
         self.approach_normal = None
 
     def reset_filter_only(self) -> None:
         """Drop the filter but keep the approach side fixed (used at MEASURE entry)."""
         self.kalman = None
+        self.estimate_count = 0
 
     def record_current_gate(self) -> RecordedGate | None:
         """Snapshot the current filter estimate into `recorded_gates`.

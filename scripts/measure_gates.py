@@ -50,7 +50,7 @@ CORNER_LABELS = ["TL", "TR", "BR", "BL"]
 TOTAL_POINTS = NUM_GATES * CORNERS_PER_GATE
 MIN_BASE_STATIONS = 2
 
-LIGHTHOUSE_BS_AVAILABLE = "lighthouse.bsAvailable"
+LIGHTHOUSE_BS_RECEIVE = "lighthouse.bsReceive"
 
 
 class PoseStream:
@@ -71,12 +71,12 @@ class PoseStream:
         lg.add_variable("stateEstimate.z", "float")
         toc = cf.log.toc
         group_vars = toc.toc.get("lighthouse", {}) if toc else {}
-        if "bsAvailable" in group_vars:
-            lg.add_variable(LIGHTHOUSE_BS_AVAILABLE, "uint16_t")
+        if "bsReceive" in group_vars:
+            lg.add_variable(LIGHTHOUSE_BS_RECEIVE, "uint16_t")
             self._has_lighthouse_var = True
         else:
             print(
-                f"[warn] {LIGHTHOUSE_BS_AVAILABLE} not in log TOC; "
+                f"[warn] {LIGHTHOUSE_BS_RECEIVE} not in log TOC; "
                 "capture will not be gated on lighthouse visibility.",
                 file=sys.stderr,
             )
@@ -89,7 +89,7 @@ class PoseStream:
         self.y = float(data["stateEstimate.y"])
         self.z = float(data["stateEstimate.z"])
         if self._has_lighthouse_var:
-            self.bs_visible = int(data[LIGHTHOUSE_BS_AVAILABLE]).bit_count()
+            self.bs_visible = int(data[LIGHTHOUSE_BS_RECEIVE]).bit_count()
         self.last_update = time.time()
 
     def fresh(self) -> bool:

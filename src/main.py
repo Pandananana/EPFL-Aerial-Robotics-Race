@@ -179,6 +179,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "emitting each recorded pose/frame row.",
     )
     ap.add_argument(
+        "--start-frame", type=int, default=1,
+        help="Replay only: start playback from this 1-based frame/row number.",
+    )
+    ap.add_argument(
         "--no-fly", action="store_true",
         help="Connect to the AI-deck and Crazyflie for video + pose but never "
              "arm or send setpoints. Use this when recording calibration / "
@@ -240,7 +244,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         if args.recording is None:
             raise SystemExit("--source replay requires --recording <dir>")
-        replay = build_replay(args.recording, args.speed, step=args.replay_step)
+        replay = build_replay(
+            args.recording,
+            args.speed,
+            step=args.replay_step,
+            start_frame=args.start_frame,
+        )
         video, link = replay, replay
         record = False
 
@@ -294,19 +303,35 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[GATE_DEBUG] plotting true gates from {debug_truth_csv}", flush=True)
         if args.source == "webots":
             print("[GATE_DEBUG] using Webots world frame: x forward, y left, z up", flush=True)
+    elif args.debug:
+        if args.source == "replay" and args.recording is not None:
+            print(
+                f"[GATE_DEBUG] disabled: no truth gates found. Pass "
+                f"--true-gates <csv>, or add {args.recording / 'gates.csv'}.",
+                flush=True,
+            )
+        else:
+            print(
+                "[GATE_DEBUG] disabled: pass --true-gates <csv> to open the 3D plotter.",
+                flush=True,
+            )
 
     def print_gate3d(g):
+        pose = _latest_pose.get()
+        bs = ""
+        if args.debug:
+            count = pose.lighthouse_bs_visible if pose is not None else None
+            bs = f" lighthouse_bs={count if count is not None else '?'}"
         if not g.corners_cam_m:
-            print(f"[GATE3D] frame={g.frame_seq} no valid 3D gates", flush=True)
+            print(f"[GATE3D] frame={g.frame_seq}{bs} no valid 3D gates", flush=True)
             return
 
-        pose = _latest_pose.get()
         for i, corners in enumerate(g.corners_cam_m):
             if pose is not None:
                 world_pts = camera_corners_to_world(corners, pose)
                 center = np.mean(world_pts, axis=0)
                 print(
-                    f"[GATE3D] frame={g.frame_seq} gate={i} "
+                    f"[GATE3D] frame={g.frame_seq}{bs} gate={i} "
                     f"world_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}]m "
                     f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
                     flush=True,
@@ -314,7 +339,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 cam_center = corners.mean(axis=0)
                 print(
-                    f"[GATE3D] frame={g.frame_seq} gate={i} "
+                    f"[GATE3D] frame={g.frame_seq}{bs} gate={i} "
                     f"cam_center=[{cam_center[0]:+.2f}, {cam_center[1]:+.2f}, {cam_center[2]:+.2f}]m "
                     f"width={g.widths_m[i]:.2f}m err={g.reprojection_errors_px[i]:.1f}px",
                     flush=True,
