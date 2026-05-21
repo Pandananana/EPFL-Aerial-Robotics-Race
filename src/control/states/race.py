@@ -44,13 +44,25 @@ class RaceState(State):
         # `num_laps` times, then finish at a point past the last gate along
         # its entry direction so the trajectory actually carries the drone
         # through the final gate plane instead of decelerating to rest at
-        # its centre.
+        # its centre. Between laps, route through a transition waypoint
+        # that sits at the XY centroid of (last gate, first gate, takeoff)
+        # at a height halfway between the last and first gate — keeps the
+        # closing-then-opening sweep clear of the ground without doubling
+        # back over the takeoff spot.
         start = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z], dtype=np.float64)
+        g_first = self._gates[0].center
+        g_last = self._gates[-1].center
+        transition = np.array([
+            (g_last[0] + g_first[0] + ctx.start_x) / 3.0,
+            (g_last[1] + g_first[1] + ctx.start_y) / 3.0,
+            (g_last[2] + g_first[2]) / 2.0,
+        ], dtype=np.float64)
         waypoints: list[np.ndarray] = [start]
-        for _ in range(self._num_laps):
+        for lap in range(self._num_laps):
+            if lap > 0:
+                waypoints.append(transition.copy())
             for g in self._gates:
                 waypoints.append(g.center.copy())
-        g_last = self._gates[-1].center
         prev_center = self._gates[-2].center if len(self._gates) >= 2 else start
         entry_dir = g_last - prev_center
         entry_norm = float(np.linalg.norm(entry_dir))
