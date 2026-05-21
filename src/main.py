@@ -47,6 +47,7 @@ import yaml
 from PyQt6 import QtCore, QtWidgets
 
 from src.control.controller import Controller
+from src.control.gates_csv import load_gates_csv
 from src.control.manual import ManualControl
 from src.control.planner import Planner
 from src.bus import Latest
@@ -78,6 +79,9 @@ def build_system(
     video: VideoSource,
     link: DroneLink,
     record: bool = True,
+    preloaded_gates=None,
+    gates_save_path: Path | None = None,
+    num_race_laps: int = Planner.DEFAULT_NUM_RACE_LAPS,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -96,7 +100,12 @@ def build_system(
         gate_height_m=cfg["perception"]["gate_height_m"],
         width_search=tuple(cfg["perception"]["gate_width_search_m"]),
     )
-    planner = Planner(default_height_m=cfg["control"]["default_height_m"])
+    planner = Planner(
+        default_height_m=cfg["control"]["default_height_m"],
+        preloaded_gates=preloaded_gates,
+        gates_save_path=gates_save_path,
+        num_race_laps=num_race_laps,
+    )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
         speed_mps=cfg["control"]["speed_mps"],
@@ -186,6 +195,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Optional gates.csv with true gate poses for the 3D debug plot. "
              "Replay defaults to <recording>/gates.csv when present.",
     )
+    ap.add_argument(
+        "--gates-csv", type=Path, default=None,
+        help="Preload gate poses from a CSV (same format as data/recordings/<id>"
+             "/gates.csv). With this set, the mission skips the recon lap and "
+             "drops straight from takeoff into the racing trajectory.",
+    )
+    ap.add_argument(
+        "--gates-save-path", type=Path, default=Path("data/gates_latest.csv"),
+        help="Where the full-mode mission writes the measured gates.csv after "
+             "the recon lap lands. Subsequent --gates-csv runs can read it back.",
+    )
+    ap.add_argument(
+        "--num-race-laps", type=int, default=Planner.DEFAULT_NUM_RACE_LAPS,
+        help="Number of race laps after the recon lap (or right after takeoff "
+             "in --gates-csv mode).",
+    )
     return ap.parse_args(argv)
 
 
@@ -217,8 +242,23 @@ def main(argv: list[str] | None = None) -> int:
         video, link = replay, replay
         record = False
 
+    preloaded_gates = None
+    if args.gates_csv is not None:
+        preloaded_gates = load_gates_csv(args.gates_csv)
+        print(
+            f"[main] race-only mode: loaded {len(preloaded_gates)} gates from "
+            f"{args.gates_csv}",
+            flush=True,
+        )
+
     active_cal = cal.get(args.source, cal)
-    sys_ = build_system(cfg, active_cal, video=video, link=link, record=record)
+    sys_ = build_system(
+        cfg, active_cal,
+        video=video, link=link, record=record,
+        preloaded_gates=preloaded_gates,
+        gates_save_path=args.gates_save_path,
+        num_race_laps=args.num_race_laps,
+    )
 
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
