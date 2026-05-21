@@ -5,13 +5,16 @@ Setpoints follow the cflib `send_hover_setpoint` format:
   yaw_rate deg/s
   height   absolute z (m)
 
-For lateral tracking we run a plain P-loop on world-frame position error
-to produce a world-frame velocity, cap that magnitude at the waypoint's
-`max_speed_mps`, and rotate it into the body frame via the current yaw.
-Yaw is closed the same way: a P-loop on yaw error produces a yaw rate,
-capped at MAX_YAW_RATE_DPS. Altitude tracking stays where it was — set
-`height` from the waypoint and let the firmware (or the in-sim PID) close
-the z loop.
+For lateral tracking we run a P-loop on world-frame position error plus a
+world-frame velocity feedforward from the waypoint (zero for stationary
+targets, the trajectory's tangent velocity during race laps — without the
+FF a pure P-loop lags the reference and cuts curves to the inside). The
+combined world-frame velocity is capped at the waypoint's `max_speed_mps`
+and then rotated into the body frame via the current yaw. Yaw is closed
+the same way: a P-loop on yaw error produces a yaw rate, capped at
+MAX_YAW_RATE_DPS. Altitude tracking stays where it was — set `height`
+from the waypoint and let the firmware (or the in-sim PID) close the z
+loop.
 """
 
 from __future__ import annotations
@@ -51,11 +54,12 @@ class Controller(QtCore.QObject):
             ))
             return
 
-        # World-frame velocity from position error, capped at the waypoint speed.
+        # World-frame velocity: P-correction on position error plus the
+        # waypoint's velocity feedforward, then capped at the waypoint speed.
         dx = waypoint.x - pose.x
         dy = waypoint.y - pose.y
-        vx_world = self.XY_POS_GAIN_S_INV * dx
-        vy_world = self.XY_POS_GAIN_S_INV * dy
+        vx_world = self.XY_POS_GAIN_S_INV * dx + waypoint.vx_ff
+        vy_world = self.XY_POS_GAIN_S_INV * dy + waypoint.vy_ff
         speed = math.hypot(vx_world, vy_world)
         if waypoint.max_speed_mps > 0.0 and speed > waypoint.max_speed_mps:
             scale = waypoint.max_speed_mps / speed

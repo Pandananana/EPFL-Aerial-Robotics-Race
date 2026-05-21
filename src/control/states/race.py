@@ -22,6 +22,7 @@ import numpy as np
 from src.control.gates_csv import RecordedGate
 from src.control.states.base import Context, State
 from src.control.trajectory import PolyTrajectory
+from src.messages import Waypoint
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,8 @@ class RaceState(State):
         t = ctx.pose.timestamp - self._t_start
 
         if t >= self._trajectory.total_time:
-            # Hold the last point until ReturnHome takes over.
+            # Hold the last point until ReturnHome takes over. No feedforward
+            # — the trajectory is over, we want the controller to settle.
             target = self._trajectory.position_at(self._trajectory.total_time)
             target_yaw = math.radians(ctx.pose.yaw)  # whatever we're at; ReturnHome will rebase
             ctx.emit(target[0], target[1], target[2], target_yaw, self.RACE_SPEED_MPS)
@@ -92,6 +94,14 @@ class RaceState(State):
             return ReturnHomeState()
 
         target = self._trajectory.position_at(t)
+        v_ff = self._trajectory.velocity_at(t)
         target_yaw = self._trajectory.yaw_at(t)
-        ctx.emit(target[0], target[1], target[2], target_yaw, self.RACE_SPEED_MPS)
+        ctx.emit_waypoint(Waypoint(
+            timestamp=ctx.pose.timestamp,
+            x=float(target[0]), y=float(target[1]), z=float(target[2]),
+            yaw=math.degrees(target_yaw),
+            max_speed_mps=self.RACE_SPEED_MPS,
+            vx_ff=float(v_ff[0]),
+            vy_ff=float(v_ff[1]),
+        ))
         return None
