@@ -11,6 +11,7 @@ re-takeoff, race, return-home, land) if we've cleared all of them.
 from __future__ import annotations
 
 import logging
+import math
 
 import numpy as np
 
@@ -19,19 +20,47 @@ from src.control.states.base import Context, State
 logger = logging.getLogger(__name__)
 
 
+def _angle_diff(a: float, b: float) -> float:
+    return abs(((a - b + math.pi) % (2 * math.pi)) - math.pi)
+
+
 class PassThroughState(State):
     REACHED_M = 0.20
     PASS_SPEED_MPS = 0.1
+    TURN_RIGHT_RAD = -math.pi / 4          # 45 deg clockwise (right) after pass-through
+    YAW_TOL_RAD = math.radians(5.0)
+    HOLD_S = 1.0
+    HOLD_SPEED_MPS = 0.1
 
     def __init__(self, target_pos: np.ndarray, target_yaw_rad: float) -> None:
         self._pos = target_pos.copy()
         self._yaw = target_yaw_rad
+        self._reached = False
+        self._turn_yaw_rad: float | None = None
+        self._hold_start_t: float | None = None
 
     def tick(self, ctx: Context) -> State | None:
-        ctx.emit(self._pos[0], self._pos[1], self._pos[2], self._yaw, self.PASS_SPEED_MPS)
+        if not self._reached:
+            ctx.emit(self._pos[0], self._pos[1], self._pos[2], self._yaw, self.PASS_SPEED_MPS)
+            drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])
+            if np.linalg.norm(self._pos - drone_pos) > self.REACHED_M:
+                return None
+            self._reached = True
+            self._turn_yaw_rad = self._yaw + self.TURN_RIGHT_RAD
 
-        drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])
-        if np.linalg.norm(self._pos - drone_pos) > self.REACHED_M:
+        assert self._turn_yaw_rad is not None
+        ctx.emit(
+            self._pos[0], self._pos[1], self._pos[2],
+            self._turn_yaw_rad, self.HOLD_SPEED_MPS,
+        )
+
+        if self._hold_start_t is None:
+            current_yaw_rad = math.radians(ctx.pose.yaw)
+            if _angle_diff(self._turn_yaw_rad, current_yaw_rad) > self.YAW_TOL_RAD:
+                return None
+            self._hold_start_t = ctx.pose.timestamp
+
+        if ctx.pose.timestamp - self._hold_start_t < self.HOLD_S:
             return None
 
         ctx.gates_done += 1
