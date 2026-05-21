@@ -190,7 +190,7 @@ def parse_args() -> argparse.Namespace:
              "data/calibration/<timestamp>/",
     )
     ap.add_argument(
-        "--inner-corners", type=int, nargs=2, default=[6, 8],
+        "--inner-corners", type=int, nargs=2, default=[5, 7],
         metavar=("COLS", "ROWS"),
         help="Inner-corner count (cols rows). A 7x9-square board has 6 8. "
              "Default: 6 8.",

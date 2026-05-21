@@ -22,16 +22,17 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.08678493737856167 0.9897152282172664 0.11371957473998688 0.87719713954117
-  position -10.99 1.5 17.15
+  position -14.99 -2.5 17.15
   follow "crazyflie"
 }
 TexturedBackground {
 }
 Crazyflie {
-  translation 5.745 4 0.115
+  translation 1.745 0 0.115
   rotation 0 0 1 2.61799
   name "crazyflie"
   controller "<extern>"
+  supervisor TRUE
   extensionSlot [
     DEF CF_CAMERA Camera {
       name "cf_camera"
@@ -57,32 +58,32 @@ Crazyflie {
   ]
 }
 CeilingLight {
-  translation 4 4 6
+  translation 0 0 6
   name "ceiling light 1"
   pointLightIntensity 7
 }
 CeilingLight {
-  translation 7 1 6
+  translation 3 -3 6
   name "ceiling light 2"
   pointLightIntensity 7
 }
 CeilingLight {
-  translation 7 7 6
+  translation 3 3 6
   name "ceiling light 3"
   pointLightIntensity 7
 }
 CeilingLight {
-  translation 1 1 6
+  translation -3 -3 6
   name "ceiling light 4"
   pointLightIntensity 7
 }
 CeilingLight {
-  translation 1 7 6
+  translation -3 3 6
   name "ceiling light 5"
   pointLightIntensity 7
 }
 Floor {
-  translation 4 4 0
+  translation 0 0 0
   tileSize 0.64 0.64
   appearance PBRAppearance {
     baseColorMap ImageTexture {
@@ -95,7 +96,7 @@ Floor {
   }
 }
 DEF WALL_LEFT Solid {
-  translation 4 9 3
+  translation 0 5 3
   rotation 1 0 0 1.57
   children [
     Shape {
@@ -120,7 +121,7 @@ DEF WALL_LEFT Solid {
   boundingObject USE DOOR_WALL_SHAPE
 }
 DEF WALL_FRONT Solid {
-  translation 9 4 3
+  translation 5 0 3
   rotation 0.5773502691896258 -0.5773502691896258 -0.5773502691896258 2.093
   children [
     Shape {
@@ -145,7 +146,7 @@ DEF WALL_FRONT Solid {
   boundingObject USE DOOR_WALL_SHAPE
 }
 DEF WALL_RIGHT Solid {
-  translation 4 -1 3
+  translation 0 -5 3
   rotation 0 0.7071067811865475 0.7071067811865475 3.141
   children [
     Shape {
@@ -170,7 +171,7 @@ DEF WALL_RIGHT Solid {
   boundingObject USE DOOR_WALL_SHAPE
 }
 DEF WALL_BACK Solid {
-  translation -1 4 3
+  translation -5 0 3
   rotation 0.5773502691896258 0.5773502691896258 0.5773502691896258 2.094
   children [
     Shape {
@@ -195,7 +196,7 @@ DEF WALL_BACK Solid {
   boundingObject USE DOOR_WALL_SHAPE
 }
 DEF CEILING Solid {
-  translation 4 4 6
+  translation 0 0 6
   rotation 0 -1 0 3.141
   children [
     Shape {
@@ -220,7 +221,7 @@ DEF CEILING Solid {
   boundingObject USE DOOR_WALL_SHAPE
 }
 DEF TAKE_OFF_PAD Solid {
-  translation 5.745 4 0.05
+  translation 1.745 0 0.05
   children [
     DEF PAD_SHAPE Shape {
       appearance PBRAppearance {
@@ -241,7 +242,7 @@ DEF TAKE_OFF_PAD Solid {
   boundingObject USE PAD_SHAPE
 }
 DEF FLIGHT_AREA Solid {
-  translation 4 4 0.001
+  translation 0 0 0.001
   children [
     DEF FLIGHT_AREA_SHAPE Shape {
       appearance PBRAppearance {
@@ -262,7 +263,7 @@ DEF FLIGHT_AREA Solid {
 }
 DEF GATE0 RacingGate {
   name "GATE0"
-  translation 4.345 4.7725 1.155
+  translation 0.345 0.7725 1.155
   rotation 0 0 1 -0.0332963267948966
   goalSize 0.04 0.29 0.4
   topBeamTranslation 0 0 0.23
@@ -278,7 +279,7 @@ DEF GATE0 RacingGate {
 }
 DEF GATE1 RacingGate {
   name "GATE1"
-  translation 3.36 4.7775 1.20
+  translation -0.64 0.7775 1.20
   rotation 0 0 1 0.2756036732051034
   goalSize 0.04 0.4 0.4
   topBeamTranslation 0 0 0.23
@@ -294,7 +295,7 @@ DEF GATE1 RacingGate {
 }
 DEF GATE2 RacingGate {
   name "GATE2"
-  translation 2.5875 3.885 1.4025
+  translation -1.4125 -0.115 1.4025
   rotation 0 0 1 1.7475926535897933
   goalSize 0.04 0.29 0.4
   topBeamTranslation 0 0 0.23
@@ -310,7 +311,7 @@ DEF GATE2 RacingGate {
 }
 DEF GATE3 RacingGate {
   name "GATE3"
-  translation 3.41 3.17 1.2825
+  translation -0.59 -0.83 1.2825
   rotation 0 0 1 -3.0221963267948966
   goalSize 0.04 0.5 0.4
   topBeamTranslation 0 0 0.23
@@ -326,7 +327,7 @@ DEF GATE3 RacingGate {
 }
 DEF GATE4 RacingGate {
   name "GATE4"
-  translation 4.3625 2.6575 1.465
+  translation 0.3625 -1.3425 1.465
   rotation 0 0 1 3.0570963267948965
   goalSize 0.04 0.4 0.4
   topBeamTranslation 0 0 0.23

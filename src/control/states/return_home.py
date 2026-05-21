@@ -20,6 +20,11 @@ class ReturnHomeState(State):
     YAW_REACHED_RAD = math.radians(10.0)
     RETURN_SPEED_MPS = 0.2
 
+    def __init__(self, then_after_land: State | None = None) -> None:
+        """`then_after_land` is forwarded to LandState. None means the landing
+        is terminal (mission_done fires)."""
+        self._then_after_land = then_after_land
+
     def tick(self, ctx: Context) -> State | None:
         ctx.emit(
             ctx.start_x, ctx.start_y, ctx.takeoff_height_m,
@@ -32,5 +37,5 @@ class ReturnHomeState(State):
         if dist < self.REACHED_M and yaw_err < self.YAW_REACHED_RAD:
             logger.info("Returned to start; landing")
             from src.control.states.land import LandState
-            return LandState()
+            return LandState(then=self._then_after_land)
         return None

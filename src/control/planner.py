@@ -5,25 +5,32 @@ gate detections to the current state, and swaps to whatever state the
 state returns. The states themselves live under `src/control/states/` so
 this file stays small — see `states/base.py` for the State contract.
 
-The mission today is:
+Two mission shapes are supported, picked by whether a preloaded gate list
+is supplied to the planner:
 
+- **Full** (no preloaded gates):
     TAKEOFF -> N x (SEARCH -> APPROACH -> MEASURE -> PASS_THROUGH)
-            -> RETURN_HOME -> LAND -> DONE
+            -> RETURN_HOME -> LAND (motors stay armed)
+            -> SAVE_GATES (writes gates.csv) -> TAKEOFF
+            -> RACE -> RETURN_HOME -> LAND (terminal) -> DONE
 
-Racing isn't implemented yet; it will slot in between the final
-pass-through and the return-home transition.
+- **Race-only** (preloaded gates, e.g. from a prior recon lap's CSV):
+    TAKEOFF -> RACE -> RETURN_HOME -> LAND (terminal) -> DONE
 """
 
 from __future__ import annotations
 
 import logging
 import math
+from pathlib import Path
 
 from PyQt6 import QtCore
 
 from src.bus import Latest
+from src.control.gates_csv import RecordedGate
 from src.control.states.base import Context, State
 from src.control.states.gate_tracker import GateTracker
+from src.control.states.race import RaceState
 from src.control.states.takeoff import TakeoffState
 from src.messages import DronePose, Gate3D
 
@@ -31,9 +38,12 @@ logger = logging.getLogger(__name__)
 
 
 class Planner(QtCore.QObject):
-    waypoint_ready = QtCore.pyqtSignal(object)   # Waypoint
-    mission_done = QtCore.pyqtSignal()           # fires once after landing
-    state_changed = QtCore.pyqtSignal(str)       # state class name
+    waypoint_ready = QtCore.pyqtSignal(object)        # Waypoint
+    mission_done = QtCore.pyqtSignal()               # fires once after landing
+    state_changed = QtCore.pyqtSignal(str)           # state class name
+    gate_estimate_ready = QtCore.pyqtSignal(object)  # current Kalman gate corners
+    gate_estimated = QtCore.pyqtSignal(object)       # GateEstimate, once per measured gate
+    race_trajectory_ready = QtCore.pyqtSignal(object)  # (N,3) sampled planned race path
 
     DEFAULT_GATE_COUNT = 5
 
@@ -42,12 +52,16 @@ class Planner(QtCore.QObject):
         *,
         default_height_m: float,
         n_gates: int = DEFAULT_GATE_COUNT,
+        preloaded_gates: list[RecordedGate] | None = None,
+        gates_save_path: Path | None = None,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._pose: Latest[DronePose] = Latest()
         self._takeoff_height_m = default_height_m
         self._n_gates = n_gates
+        self._preloaded_gates = list(preloaded_gates) if preloaded_gates else None
+        self._gates_save_path = Path(gates_save_path) if gates_save_path is not None else None
 
         self._state: State | None = None
         self._tracker = GateTracker()
@@ -62,12 +76,24 @@ class Planner(QtCore.QObject):
         if self._state is not None:
             return
         self._tracker.reset()
+        self._tracker.recorded_gates = []
         self._gates_done = 0
         self._start_x = None
         self._start_y = None
         self._start_yaw_rad = None
-        self._state = TakeoffState()
-        logger.info("Mission start (target %d gates)", self._n_gates)
+        if self._preloaded_gates:
+            race = RaceState(self._preloaded_gates)
+            self._state = TakeoffState(then=race)
+            logger.info(
+                "Mission start (race-only, %d preloaded gates)",
+                len(self._preloaded_gates),
+            )
+        else:
+            self._state = TakeoffState()
+            logger.info(
+                "Mission start (full: recon %d gates -> race)",
+                self._n_gates,
+            )
         self.state_changed.emit(type(self._state).__name__)
 
     @QtCore.pyqtSlot(object)
@@ -96,6 +122,8 @@ class Planner(QtCore.QObject):
             return
         ctx = self._make_context(pose)
         self._state.on_gate(ctx, gate)
+        if self._tracker.kalman is not None:
+            self.gate_estimate_ready.emit(self._tracker.kalman.corners())
 
     def _make_context(self, pose: DronePose) -> Context:
         return Context(
@@ -112,4 +140,7 @@ class Planner(QtCore.QObject):
             takeoff_height_m=self._takeoff_height_m,
             emit_waypoint=self.waypoint_ready.emit,
             notify_mission_done=self.mission_done.emit,
+            notify_gate_estimated=self.gate_estimated.emit,
+            gates_save_path=self._gates_save_path,
+            emit_race_trajectory=self.race_trajectory_ready.emit,
         )

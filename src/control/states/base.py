@@ -18,9 +18,10 @@ import math
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from src.messages import DronePose, Gate3D, Waypoint
+from src.messages import DronePose, Gate3D, GateEstimate, Waypoint
 
 if TYPE_CHECKING:
     from src.control.states.gate_tracker import GateTracker
@@ -39,6 +40,11 @@ class Context:
     takeoff_height_m: float
     emit_waypoint: Callable[[Waypoint], None]
     notify_mission_done: Callable[[], None]
+    notify_gate_estimated: Callable[["GateEstimate"], None]
+    # Where to write the gates.csv at the end of the recon lap. None disables
+    # the write (e.g. when racing from a preloaded CSV).
+    gates_save_path: Path | None = None
+    emit_race_trajectory: Callable[[object], None] | None = None
 
     def emit(
         self,
