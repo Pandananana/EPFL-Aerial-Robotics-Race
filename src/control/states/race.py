@@ -71,6 +71,13 @@ class RaceState(State):
         if self._trajectory is None:
             self._trajectory = self._build_trajectory(ctx)
             self._t_start = ctx.pose.timestamp
+            if ctx.emit_race_trajectory is not None:
+                ts = np.linspace(0.0, self._trajectory.total_time, 400)
+                samples = np.array(
+                    [self._trajectory.position_at(t) for t in ts],
+                    dtype=np.float64,
+                )
+                ctx.emit_race_trajectory(samples)
 
         assert self._trajectory is not None and self._t_start is not None
         t = ctx.pose.timestamp - self._t_start

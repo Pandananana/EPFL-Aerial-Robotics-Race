@@ -42,6 +42,7 @@ class Planner(QtCore.QObject):
     mission_done = QtCore.pyqtSignal()           # fires once after landing
     state_changed = QtCore.pyqtSignal(str)       # state class name
     gate_estimate_ready = QtCore.pyqtSignal(object)  # current Kalman gate corners
+    race_trajectory_ready = QtCore.pyqtSignal(object)  # (N,3) sampled planned race path
 
     DEFAULT_GATE_COUNT = 5
 
@@ -139,4 +140,5 @@ class Planner(QtCore.QObject):
             emit_waypoint=self.waypoint_ready.emit,
             notify_mission_done=self.mission_done.emit,
             gates_save_path=self._gates_save_path,
+            emit_race_trajectory=self.race_trajectory_ready.emit,
         )

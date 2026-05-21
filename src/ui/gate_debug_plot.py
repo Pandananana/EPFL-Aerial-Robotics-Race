@@ -67,7 +67,11 @@ class GateDebugPlotter(QtCore.QObject):
         self._poses_by_timestamp: dict[float, DronePose] = {}
         self._raw_estimates: list[np.ndarray] = []
         self._kalman_estimate: np.ndarray | None = None
+        self._planned_traj: np.ndarray | None = None
+        self._actual_traj: list[np.ndarray] = []
+        self._recording_actual = False
         self._closed = False
+        self._bounds_set = False
 
         import matplotlib.pyplot as plt
 
@@ -75,7 +79,9 @@ class GateDebugPlotter(QtCore.QObject):
         self._plt.ion()
         self._fig = self._plt.figure("Webots gate debug", figsize=(8, 7))
         self._ax = self._fig.add_subplot(1, 1, 1, projection="3d")
+        self._ax.view_init(elev=40, azim=-80)
         self._fig.canvas.mpl_connect("key_press_event", self._on_key)
+        self._fig.show()
         self._draw()
 
     @staticmethod
@@ -97,6 +103,28 @@ class GateDebugPlotter(QtCore.QObject):
             oldest = sorted(self._poses_by_timestamp)[:128]
             for timestamp in oldest:
                 del self._poses_by_timestamp[timestamp]
+        if self._recording_actual:
+            self._actual_traj.append(
+                np.array([pose.x, pose.y, pose.z], dtype=np.float64)
+            )
+
+    @QtCore.pyqtSlot(object)
+    def on_race_trajectory(self, points: object) -> None:
+        if self._closed:
+            return
+        arr = np.asarray(points, dtype=np.float64)
+        if arr.ndim != 2 or arr.shape[1] != 3 or arr.shape[0] < 2:
+            return
+        self._planned_traj = arr
+        self._actual_traj = []
+        self._recording_actual = True
+        self._bounds_set = False
+        self._draw()
+
+    @QtCore.pyqtSlot(str)
+    def on_state_changed(self, name: str) -> None:
+        if name != "RaceState":
+            self._recording_actual = False
 
     @QtCore.pyqtSlot(object)
     def on_gate(self, gate: Gate3D) -> None:
@@ -121,6 +149,10 @@ class GateDebugPlotter(QtCore.QObject):
         self._draw()
 
     def _draw(self) -> None:
+        elev, azim = self._ax.elev, self._ax.azim
+        xlim = self._ax.get_xlim() if self._bounds_set else None
+        ylim = self._ax.get_ylim() if self._bounds_set else None
+        zlim = self._ax.get_zlim() if self._bounds_set else None
         self._ax.clear()
 
         for gate_id, corners in self._truth.items():
@@ -162,19 +194,48 @@ class GateDebugPlotter(QtCore.QObject):
                 label = "K"
             _plot_gate(self._ax, self._kalman_estimate, color="blue", label=label)
 
+        if self._planned_traj is not None:
+            self._ax.plot(
+                self._planned_traj[:, 1],
+                self._planned_traj[:, 0],
+                self._planned_traj[:, 2],
+                color="orange",
+                linewidth=2,
+                label="planned",
+            )
+
+        if len(self._actual_traj) >= 2:
+            actual = np.asarray(self._actual_traj, dtype=np.float64)
+            self._ax.plot(
+                actual[:, 1],
+                actual[:, 0],
+                actual[:, 2],
+                color="magenta",
+                linewidth=1.5,
+                label="actual",
+            )
+
         self._ax.set_xlabel("Y")
         self._ax.set_ylabel("X")
         self._ax.set_zlabel("Z")
         self._ax.set_title("True gates vs current estimates")
-        self._set_dynamic_bounds()
-        self._ax.view_init(elev=40, azim=-80)
+        if xlim is not None:
+            self._ax.set_xlim(xlim)
+            self._ax.set_ylim(ylim)
+            self._ax.set_zlim(zlim)
+        else:
+            self._set_dynamic_bounds()
+            self._bounds_set = True
+        self._ax.view_init(elev=elev, azim=azim)
         self._fig.canvas.draw_idle()
-        self._plt.pause(0.001)
+        self._fig.canvas.flush_events()
 
     def _set_dynamic_bounds(self) -> None:
         gate_sets = list(self._truth.values()) + self._raw_estimates
         if self._kalman_estimate is not None:
             gate_sets.append(self._kalman_estimate)
+        if self._planned_traj is not None:
+            gate_sets.append(self._planned_traj)
         if not gate_sets:
             self._ax.set_xlim(2, -2)
             self._ax.set_ylim(-2, 2)

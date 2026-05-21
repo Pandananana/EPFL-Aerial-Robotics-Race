@@ -43,6 +43,7 @@ class Context:
     # Where to write the gates.csv at the end of the recon lap. None disables
     # the write (e.g. when racing from a preloaded CSV).
     gates_save_path: Path | None = None
+    emit_race_trajectory: Callable[[object], None] | None = None
 
     def emit(
         self,

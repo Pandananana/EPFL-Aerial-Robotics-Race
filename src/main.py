@@ -288,6 +288,8 @@ def main(argv: list[str] | None = None) -> int:
         sys_["link"].pose_ready.connect(gate_debug_plotter.on_pose)
         sys_["estimator"].gate_ready.connect(gate_debug_plotter.on_gate)
         sys_["planner"].gate_estimate_ready.connect(gate_debug_plotter.on_gate_estimate)
+        sys_["planner"].race_trajectory_ready.connect(gate_debug_plotter.on_race_trajectory)
+        sys_["planner"].state_changed.connect(gate_debug_plotter.on_state_changed)
         print(f"[GATE_DEBUG] plotting true gates from {debug_truth_csv}", flush=True)
         if args.source == "webots":
             print("[GATE_DEBUG] using Webots world frame: x forward, y left, z up", flush=True)
