@@ -18,8 +18,7 @@ race:
 	uv run python -m src.main --source live --race-only --true-gates $(GATES)
 
 race-webots:
-	@if [ -z "$(GATES)" ]; then echo "usage: make race-webots GATES=data/gates/<file>.csv"; exit 2; fi
-	uv run python -m src.main --source webots --race-only --true-gates $(GATES)
+	uv run python -m src.main --source webots --race-only
 
 measure:
 	uv run python -m scripts.measure_gates

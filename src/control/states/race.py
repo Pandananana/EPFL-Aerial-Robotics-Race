@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class RaceState(State):
     RACE_SPEED_MPS = 3.0  # waypoint cap; the trajectory itself stays inside PolyTrajectory's limits
+    FINISH_OVERSHOOT_M = 0.4  # extrapolate past gate 0 so the closing pass actually flies through
 
     def __init__(self, gates: list[RecordedGate], num_laps: int = 2) -> None:
         if not gates:
@@ -38,15 +39,24 @@ class RaceState(State):
 
     def _build_trajectory(self, ctx: Context) -> PolyTrajectory:
         # Start from the drone's current pose, loop through every gate
-        # `num_laps` times, then return to the first gate so the timer naturally
-        # stops back at the start of the circuit (matching the aerial-robotics
-        # race convention).
+        # `num_laps` times, then close the circuit by flying through gate 0
+        # (matching the aerial-robotics race convention where the timer stops
+        # at the start/finish gate). The closing pass uses an overshoot point
+        # past gate 0 along the entry direction so the trajectory actually
+        # carries the drone through the gate plane instead of decelerating to
+        # rest at its centre.
         start = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z], dtype=np.float64)
         waypoints: list[np.ndarray] = [start]
         for _ in range(self._num_laps):
             for g in self._gates:
                 waypoints.append(g.center.copy())
-        waypoints.append(self._gates[0].center.copy())
+        g0 = self._gates[0].center
+        entry_dir = g0 - self._gates[-1].center
+        entry_norm = float(np.linalg.norm(entry_dir))
+        if entry_norm > 1e-6:
+            waypoints.append(g0 + (entry_dir / entry_norm) * self.FINISH_OVERSHOOT_M)
+        else:
+            waypoints.append(g0.copy())
         traj = PolyTrajectory(waypoints)
         logger.info(
             "Race trajectory: %.2fm over %.2fs through %d waypoints "

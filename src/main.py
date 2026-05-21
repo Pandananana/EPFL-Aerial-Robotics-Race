@@ -186,16 +186,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     ap.add_argument(
         "--true-gates", type=Path, default=None,
-        help="Ground-truth gates.csv. Feeds the 3D debug plot in replay/webots, "
-             "and — with --race-only — is also loaded as the preloaded gate set. "
-             "Replay/webots fall back to <recording>/gates.csv or "
-             "data/webots_gates.csv for the debug plot when this is omitted.",
+        help="Ground-truth gates.csv. Feeds the 3D debug plot in replay, and — "
+             "with --race-only — is also loaded as the preloaded gate set. "
+             "Replay falls back to <recording>/gates.csv for the debug plot "
+             "when this is omitted. In --source webots, the truth gates are "
+             "always data/gates/sim_gates.csv (also placed in the sim) and "
+             "this flag is ignored.",
     )
     ap.add_argument(
         "--race-only", action="store_true",
         help="Skip the recon lap and drop straight from takeoff into the racing "
-             "trajectory, using the gates loaded from --true-gates. Requires "
-             "--true-gates.",
+             "trajectory. In --source live/replay, requires --true-gates. In "
+             "--source webots, uses data/gates/sim_gates.csv automatically.",
     )
     ap.add_argument(
         "--debug", action="store_true",
@@ -210,22 +212,30 @@ def main(argv: list[str] | None = None) -> int:
     cfg, cal = load_config()
     app = QtWidgets.QApplication(sys.argv[:1])
 
-    if args.race_only and args.true_gates is None:
+    if args.race_only and args.true_gates is None and args.source != "webots":
         raise SystemExit("--race-only requires --true-gates <csv>")
 
+    webots_sim_gates: list | None = None
+    webots_sim_gates_path: Path | None = None
     if args.source == "live":
         video, link = build_live(cfg, no_fly=args.no_fly)
         record = True
         if args.no_fly:
             print("[main] --no-fly: arming + setpoints disabled; video/pose only.")
     elif args.source == "webots":
-        backend = build_webots(cfg)
+        backend, webots_sim_gates, webots_sim_gates_path = build_webots(cfg)
         video, link = backend, backend
         record = True
         # The Webots assignment world has emissive pink-panel gates; the
         # HSV-based pink detector is purpose-built for them and avoids the
         # domain gap that trips up the AI-deck-trained YOLO models.
         cfg["perception"]["detector"] = "pink"
+        if args.true_gates is not None:
+            print(
+                f"[main] --source webots ignores --true-gates; "
+                f"using {webots_sim_gates_path} as the truth source.",
+                flush=True,
+            )
     else:
         if args.recording is None:
             raise SystemExit("--source replay requires --recording <dir>")
@@ -235,10 +245,15 @@ def main(argv: list[str] | None = None) -> int:
 
     preloaded_gates = None
     if args.race_only:
-        preloaded_gates = load_gates_csv(args.true_gates)
+        if args.source == "webots":
+            preloaded_gates = webots_sim_gates
+            preloaded_src = webots_sim_gates_path
+        else:
+            preloaded_gates = load_gates_csv(args.true_gates)
+            preloaded_src = args.true_gates
         print(
             f"[main] race-only mode: loaded {len(preloaded_gates)} gates from "
-            f"{args.true_gates}",
+            f"{preloaded_src}",
             flush=True,
         )
 
@@ -258,15 +273,14 @@ def main(argv: list[str] | None = None) -> int:
     _latest_pose = Latest()
     sys_["link"].pose_ready.connect(lambda p: _latest_pose.set(p))
 
-    debug_truth_csv = args.true_gates
-    if debug_truth_csv is None and args.source == "replay" and args.recording is not None:
-        candidate = args.recording / "gates.csv"
-        if candidate.exists():
-            debug_truth_csv = candidate
-    if debug_truth_csv is None and args.source == "webots":
-        candidate = REPO_ROOT / "data" / "webots_gates.csv"
-        if candidate.exists():
-            debug_truth_csv = candidate
+    if args.source == "webots":
+        debug_truth_csv = webots_sim_gates_path
+    else:
+        debug_truth_csv = args.true_gates
+        if debug_truth_csv is None and args.source == "replay" and args.recording is not None:
+            candidate = args.recording / "gates.csv"
+            if candidate.exists():
+                debug_truth_csv = candidate
 
     gate_debug_plotter = None
     if args.debug and debug_truth_csv is not None:

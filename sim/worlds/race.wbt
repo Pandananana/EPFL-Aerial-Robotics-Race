@@ -32,6 +32,7 @@ Crazyflie {
   rotation 0 0 1 2.61799
   name "crazyflie"
   controller "<extern>"
+  supervisor TRUE
   extensionSlot [
     DEF CF_CAMERA Camera {
       name "cf_camera"
