@@ -225,7 +225,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.source == "webots":
         backend, webots_sim_gates, webots_sim_gates_path = build_webots(cfg)
         video, link = backend, backend
-        record = True
+        record = False
         # The Webots assignment world has emissive pink-panel gates; the
         # HSV-based pink detector is purpose-built for them and avoids the
         # domain gap that trips up the AI-deck-trained YOLO models.
@@ -344,10 +344,35 @@ def main(argv: list[str] | None = None) -> int:
         lambda: print("[FSM] mission done", flush=True)
     )
 
-    # Autonomous mission starts as soon as the link is up. --no-fly is the
-    # opt-out — used when the drone is being held for calibration / recording.
+    # Autonomous mission starts once BOTH the drone link is up and the first
+    # camera frame has arrived — otherwise live mode would take off while
+    # the AI-deck is still offline / mis-wired. --no-fly is the opt-out,
+    # used when the drone is being held for calibration / recording.
     if not (args.source == "live" and args.no_fly):
-        sys_["link"].connected.connect(lambda _s: sys_["planner"].start())
+        ready = {"link": False, "video": False}
+
+        def _try_start() -> None:
+            if ready["link"] and ready["video"]:
+                sys_["planner"].start()
+
+        def _on_link_connected(_s) -> None:
+            if ready["link"]:
+                return
+            ready["link"] = True
+            if not ready["video"]:
+                print("[main] link up; waiting for first camera frame before takeoff.", flush=True)
+            _try_start()
+
+        def _on_first_frame(_f) -> None:
+            if ready["video"]:
+                return
+            ready["video"] = True
+            if not ready["link"]:
+                print("[main] camera up; waiting for drone link before takeoff.", flush=True)
+            _try_start()
+
+        sys_["link"].connected.connect(_on_link_connected)
+        sys_["video"].frame_ready.connect(_on_first_frame)
     sys_["planner"].mission_done.connect(sys_["link"].send_stop)
 
     win = FpvWindow(sys_["manual"])
