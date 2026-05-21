@@ -71,7 +71,10 @@ class Waypoint:
 
     x, y, z metres; yaw degrees. `max_speed_mps` caps how fast the controller
     may drive toward this waypoint — used to differentiate cautious recon
-    flying from fast race laps.
+    flying from fast race laps. `vx_ff, vy_ff` are an optional world-frame
+    velocity feedforward (m/s); set by trajectory-following states (race) so
+    the controller doesn't lag and cut curves. Stationary targets leave them
+    zero.
     """
     timestamp: float
     x: float
@@ -79,6 +82,8 @@ class Waypoint:
     z: float
     yaw: float
     max_speed_mps: float
+    vx_ff: float = 0.0
+    vy_ff: float = 0.0
 
 
 @dataclass(frozen=True)

@@ -20,9 +20,14 @@ class LandState(State):
     GROUND_Z_M = 0.12
     LAND_SPEED_MPS = 0.3
 
-    def __init__(self) -> None:
+    def __init__(self, then: State | None = None) -> None:
+        """`then` is the post-touchdown state. When None this is the terminal
+        landing — `notify_mission_done` fires and the link cuts motors. When
+        non-None (e.g. between the recon and racing phases) the motors stay
+        live so the next state can re-takeoff."""
         self._start_t: float | None = None
         self._start_z: float | None = None
+        self._then = then
 
     def tick(self, ctx: Context) -> State | None:
         if self._start_t is None:
@@ -38,8 +43,11 @@ class LandState(State):
         )
 
         if ctx.pose.z <= self.GROUND_Z_M:
-            logger.info("Landed; mission complete")
-            ctx.notify_mission_done()
-            from src.control.states.done import DoneState
-            return DoneState()
+            if self._then is None:
+                logger.info("Landed; mission complete")
+                ctx.notify_mission_done()
+                from src.control.states.done import DoneState
+                return DoneState()
+            logger.info("Landed; -> %s (motors stay armed)", type(self._then).__name__)
+            return self._then
         return None

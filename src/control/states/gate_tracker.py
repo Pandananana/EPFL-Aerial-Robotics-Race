@@ -14,6 +14,7 @@ import math
 
 import numpy as np
 
+from src.control.gates_csv import RecordedGate
 from src.messages import DronePose, Gate3D
 
 
@@ -111,6 +112,10 @@ class GateTracker:
         # is approaching. Set when the drone first picks a side; used to keep
         # subsequent normal computations from flipping orientation mid-flight.
         self.approach_normal: np.ndarray | None = None
+        # Snapshot of each gate after its measurement state holds it still.
+        # Survives `reset()` between gates so the planner can hand the list off
+        # to the racing trajectory and the CSV writer at end-of-recon.
+        self.recorded_gates: list[RecordedGate] = []
 
     @property
     def has_estimate(self) -> bool:
@@ -157,6 +162,28 @@ class GateTracker:
     def reset_filter_only(self) -> None:
         """Drop the filter but keep the approach side fixed (used at MEASURE entry)."""
         self.kalman = None
+
+    def record_current_gate(self) -> RecordedGate | None:
+        """Snapshot the current filter estimate into `recorded_gates`.
+
+        Called by MeasureState after the hold has converged. Returns the
+        appended record (or None when the filter / approach normal aren't
+        ready).
+        """
+        if self.kalman is None or self.approach_normal is None:
+            return None
+        corners = self.kalman.corners()
+        tl, tr, br, bl = corners
+        width = (float(np.linalg.norm(tr - tl)) + float(np.linalg.norm(br - bl))) / 2.0
+        height = (float(np.linalg.norm(bl - tl)) + float(np.linalg.norm(br - tr))) / 2.0
+        rec = RecordedGate(
+            center=self.kalman.center().copy(),
+            normal=self.approach_normal.copy(),
+            width_m=width,
+            height_m=height,
+        )
+        self.recorded_gates.append(rec)
+        return rec
 
     def _measurement_noise_for_pose(self, pose: DronePose) -> float | None:
         count = pose.lighthouse_bs_visible

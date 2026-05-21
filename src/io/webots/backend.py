@@ -28,12 +28,15 @@ at the full 125 Hz floods the detector and hangs the sim.
 from __future__ import annotations
 
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
 from PyQt6 import QtCore
 
 from src.bus import Latest
+from src.control.gates_csv import RecordedGate
+from src.io.webots.gate_placer import place_gates
 from src.io.webots.launcher import ROBOT_NAME
 from src.io.webots.pid import HoverController, _Sensors
 from src.messages import DronePose, Frame, Setpoint
@@ -49,11 +52,15 @@ class WebotsBackend(QtCore.QThread):
         *,
         camera_fps: float,
         pose_rate_hz: float,
+        sim_gates: list[RecordedGate],
+        sim_gates_path: Path | None = None,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._camera_period = 1.0 / camera_fps
         self._pose_period = 1.0 / pose_rate_hz
+        self._sim_gates = sim_gates
+        self._sim_gates_path = sim_gates_path
         self._setpoint: Latest[Setpoint] = Latest()
         self._stopped = False
         self._seq = 0
@@ -80,12 +87,22 @@ class WebotsBackend(QtCore.QThread):
     # --- QThread main loop ---
 
     def run(self) -> None:
-        # Lazy import: only fails if --source webots is actually used.
-        from controller import Robot  # type: ignore[import-not-found]
+        # Lazy import: only fails if --source webots is actually used. Use
+        # Supervisor (not Robot) so we can move the gate nodes to match the
+        # ground-truth CSV before flight starts. Requires `supervisor TRUE`
+        # on the Crazyflie node in race.wbt.
+        from controller import Supervisor  # type: ignore[import-not-found]
 
-        robot = Robot()
+        robot = Supervisor()
         timestep = int(robot.getBasicTimeStep())
         dt = timestep / 1000.0
+
+        place_gates(robot, self._sim_gates)
+        src = self._sim_gates_path if self._sim_gates_path is not None else "<provided>"
+        print(
+            f"[webots] placed {len(self._sim_gates)} gates from {src}",
+            flush=True,
+        )
 
         # Camera sampling period is rounded up to a multiple of timestep so
         # Webots doesn't re-render in between ticks we'll forward anyway.

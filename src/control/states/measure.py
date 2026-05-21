@@ -57,6 +57,15 @@ class MeasureState(State):
         pass_target = center + direction * self.PASS_OVERSHOOT_M
         pass_yaw = math.atan2(direction[1], direction[0])
 
+        rec = ctx.tracker.record_current_gate()
+        if rec is not None:
+            logger.info(
+                "Recorded gate %d: center=%s normal=%s width=%.2fm height=%.2fm",
+                len(ctx.tracker.recorded_gates),
+                np.round(rec.center, 3), np.round(rec.normal, 3),
+                rec.width_m, rec.height_m,
+            )
+
         logger.info("Pass-through target %s yaw=%.1f deg", np.round(pass_target, 2), math.degrees(pass_yaw))
         self._emit_estimate(ctx)
         from src.control.states.pass_through import PassThroughState

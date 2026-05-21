@@ -19,8 +19,12 @@ class TakeoffState(State):
     SETTLE_TIME_S = 1.0
     TAKEOFF_SPEED_MPS = 0.2
 
-    def __init__(self) -> None:
+    def __init__(self, then: State | None = None) -> None:
+        """`then` overrides the default recon-lap follow-on (SearchState) — used
+        in race mode to drop straight into RaceState, and in the second takeoff
+        of a full-mode mission to skip the recon entirely."""
         self._settled_at: float | None = None
+        self._then = then
 
     def tick(self, ctx: Context) -> State | None:
         ctx.emit(
@@ -31,6 +35,9 @@ class TakeoffState(State):
             if self._settled_at is None:
                 self._settled_at = ctx.pose.timestamp
             elif ctx.pose.timestamp - self._settled_at >= self.SETTLE_TIME_S:
+                if self._then is not None:
+                    logger.info("Takeoff complete; -> %s", type(self._then).__name__)
+                    return self._then
                 logger.info("Takeoff complete; searching for first gate")
                 from src.control.states.search import SearchState
                 return SearchState()

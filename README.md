@@ -48,18 +48,34 @@ uvx cfclient
 One entry point, three IO backends — chosen by `--source`:
 
 ```bash
-make live                                # AI-deck + Crazyflie over radio
-make webots                              # headless Webots sim (--autostart)
-make replay REC=data/recordings/<id>     # play back a recording, perception only
+make live                                            # AI-deck + Crazyflie over radio
+make webots                                          # Webots sim (extern controller)
+make replay REC=data/recordings/<id> [SPEED=1.0]     # play back a recording, perception only
+make no-fly                                          # live IO with arming + setpoints disabled
+make race GATES=data/gates/<file>.csv                # race-only on hardware: skip recon, fly the supplied gates
+make race-webots                                     # race-only in Webots (uses data/gates/sim_gates.csv)
+make measure                                         # capture gate-corner ground-truth positions
 ```
 
 Equivalent without `make`:
 
 ```bash
 uv run python -m src.main --source live
-uv run python -m src.main --source webots --autostart
-uv run python -m src.main --source replay --recording data/recordings/<id> [--speed 1.0]
+uv run python -m src.main --source webots
+uv run python -m src.main --source replay --recording data/recordings/<id> [--speed 1.0] [--replay-step]
+uv run python -m src.main --source live --no-fly
+uv run python -m src.main --source live --race-only --true-gates data/gates/<file>.csv
+uv run python -m src.main --source webots --race-only
+uv run python -m scripts.measure_gates
 ```
+
+Extra flags that work with any `--source`:
+
+- `--debug` — open the 3D gate-debug viewer (true vs. measured gates). Needs a truth source: `--true-gates` for live, `<recording>/gates.csv` fallback for replay, `data/gates/sim_gates.csv` automatically in webots.
+- `--replay-step` (replay only) — wait for a keypress in the FPV window before emitting each recorded pose/frame row.
+- `--true-gates <csv>` — ground-truth gates. Feeds the 3D debug plot, and with `--race-only` is loaded as the preloaded gate set. Ignored under `--source webots` (always uses `data/gates/sim_gates.csv`).
+- `--race-only` — skip the recon lap and drop straight from takeoff into the racing trajectory. Requires `--true-gates` for live/replay; webots picks up the sim gates automatically.
+- `--no-fly` (live only) — connect to the AI-deck and Crazyflie for video + pose but never arm or send setpoints. Also suppresses the autonomous mission. Use when recording calibration / training frames while holding the drone.
 
 ## Labels and training data
 
