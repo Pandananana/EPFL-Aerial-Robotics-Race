@@ -35,12 +35,14 @@ class ReplayThread(QtCore.QThread):
         *,
         speed: float = 1.0,
         step: bool = False,
+        start_frame: int = 1,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
         self._dir = Path(recording_dir)
         self._speed = speed
         self._step = step
+        self._start_frame = max(1, int(start_frame))
         self._mutex = QtCore.QMutex()
         self._step_ready = QtCore.QWaitCondition()
         self._pending_steps = 0
@@ -81,10 +83,13 @@ class ReplayThread(QtCore.QThread):
             rows = list(csv.DictReader(f))
         if not rows:
             return
+        rows = rows[self._start_frame - 1:]
+        if not rows:
+            return
 
         t0_rec = float(rows[0]["timestamp"])
         t0_wall = time.monotonic()
-        seq = 0
+        seq = self._start_frame - 1
 
         for r in rows:
             if self.isInterruptionRequested():

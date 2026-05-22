@@ -21,7 +21,7 @@ from PyQt6 import QtCore
 from src.bus import Latest
 from src.messages import DronePose, Setpoint
 
-LIGHTHOUSE_BS_AVAILABLE = "lighthouse.bsAvailable"
+LIGHTHOUSE_BS_RECEIVE = "lighthouse.bsReceive"
 
 
 class CrazyflieLink(QtCore.QObject):
@@ -41,7 +41,7 @@ class CrazyflieLink(QtCore.QObject):
         self._uri = uri
         self._setpoint: Latest[Setpoint] = Latest()
         self._disable_flight = disable_flight
-        self._lighthouse_available_var: str | None = None
+        self._lighthouse_receive_var: str | None = None
 
         cflib.crtp.init_drivers()
         self.cf = Crazyflie(rw_cache=cache_dir)
@@ -95,15 +95,15 @@ class CrazyflieLink(QtCore.QObject):
         lg.add_variable("stabilizer.roll", "float")
         lg.add_variable("stabilizer.pitch", "float")
         lg.add_variable("stabilizer.yaw", "float")
-        if self._has_log_variable(LIGHTHOUSE_BS_AVAILABLE):
-            self._lighthouse_available_var = LIGHTHOUSE_BS_AVAILABLE
-            lg.add_variable(LIGHTHOUSE_BS_AVAILABLE, "uint16_t")
-            print(f"[LIGHTHOUSE] logging {LIGHTHOUSE_BS_AVAILABLE}", flush=True)
+        if self._has_log_variable(LIGHTHOUSE_BS_RECEIVE):
+            self._lighthouse_receive_var = LIGHTHOUSE_BS_RECEIVE
+            lg.add_variable(LIGHTHOUSE_BS_RECEIVE, "uint16_t")
+            print(f"[LIGHTHOUSE] logging {LIGHTHOUSE_BS_RECEIVE}", flush=True)
         else:
             toc = self.cf.log.toc
             available = sorted(toc.toc.get("lighthouse", {}).keys()) if toc else []
             print(
-                "[LIGHTHOUSE] lighthouse.bsAvailable not in log TOC; "
+                "[LIGHTHOUSE] lighthouse.bsReceive not in log TOC; "
                 f"available lighthouse logs: {available}",
                 flush=True,
             )
@@ -114,8 +114,8 @@ class CrazyflieLink(QtCore.QObject):
     def _on_log(self, timestamp_ms, data, _logconf) -> None:
         import time
         bs_visible = None
-        if self._lighthouse_available_var is not None:
-            bs_visible = int(data[self._lighthouse_available_var]).bit_count()
+        if self._lighthouse_receive_var is not None:
+            bs_visible = int(data[self._lighthouse_receive_var]).bit_count()
         pose = DronePose(
             timestamp=time.time(),
             x=data["stateEstimate.x"],

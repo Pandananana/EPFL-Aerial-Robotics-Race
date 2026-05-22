@@ -29,18 +29,26 @@ class SearchState(State):
     YAW_ADVANCE_TOL_RAD = math.radians(5.0)
     SEARCH_SPEED_MPS = 0.2
     APPROACH_DISTANCE_M = 0.7
+    MIN_ESTIMATES_BEFORE_APPROACH = 3
 
     def __init__(self) -> None:
         self._yaw_target_rad: float | None = None
+        self._z_m: float | None = None
 
     def on_gate(self, ctx: Context, gate: Gate3D) -> None:
         ctx.tracker.update(gate, ctx.pose)
 
     def tick(self, ctx: Context) -> State | None:
-        if ctx.tracker.has_estimate:
+        if (
+            ctx.tracker.has_estimate
+            and ctx.tracker.estimate_count >= self.MIN_ESTIMATES_BEFORE_APPROACH
+        ):
             transition = self._build_approach(ctx)
             if transition is not None:
                 return transition
+
+        if self._z_m is None:
+            self._z_m = ctx.pose.z
 
         current_yaw = math.radians(ctx.pose.yaw)
         if self._yaw_target_rad is None:
@@ -49,7 +57,7 @@ class SearchState(State):
             self._yaw_target_rad = current_yaw + self.YAW_STEP_RAD
 
         ctx.emit(
-            ctx.pose.x, ctx.pose.y, ctx.takeoff_height_m,
+            ctx.pose.x, ctx.pose.y, self._z_m,
             self._yaw_target_rad, self.SEARCH_SPEED_MPS,
         )
         return None

@@ -11,8 +11,14 @@ from pathlib import Path
 from src.io.replay.backend import ReplayThread
 
 
-def build_replay(recording: Path, speed: float = 1.0, *, step: bool = False) -> ReplayThread:
-    return ReplayThread(recording, speed=speed, step=step)
+def build_replay(
+    recording: Path,
+    speed: float = 1.0,
+    *,
+    step: bool = False,
+    start_frame: int = 1,
+) -> ReplayThread:
+    return ReplayThread(recording, speed=speed, step=step, start_frame=start_frame)
 
 
 __all__ = ["build_replay", "ReplayThread"]
