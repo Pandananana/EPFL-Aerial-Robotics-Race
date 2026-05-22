@@ -83,6 +83,7 @@ def build_system(
     preloaded_gates=None,
     gates_save_path: Path | None = None,
     filter_1: bool = False,
+    filter_2: bool = False,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -106,6 +107,7 @@ def build_system(
         preloaded_gates=preloaded_gates,
         gates_save_path=gates_save_path,
         filter_1=filter_1,
+        filter_2=filter_2,
     )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
@@ -218,6 +220,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
              "lighthouse base stations are visible, and trust them more when "
              "three or more are visible.",
     )
+    ap.add_argument(
+        "-2", "--filter-2", action="store_true",
+        help="Enable filter 2: discard gate measurements whose world-frame "
+             "center is outside x=[-2.5, 2], y=[-2, 2], z=[0.40, 2.30].",
+    )
     return ap.parse_args(argv)
 
 
@@ -288,6 +295,7 @@ def main(argv: list[str] | None = None) -> int:
         preloaded_gates=preloaded_gates,
         gates_save_path=gates_save_path,
         filter_1=args.filter_1,
+        filter_2=args.filter_2,
     )
 
     _latest_pose = Latest()

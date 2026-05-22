@@ -105,11 +105,20 @@ class GateTracker:
     """Per-gate Kalman tracker with the chosen approach-side normal."""
 
     BASE_MEASUREMENT_NOISE = 0.1
+    ARENA_XLIM = (-1.7, 1.5)
+    ARENA_YLIM = (-1.5, 1.5)
+    ARENA_ZLIM = (0.40, 2.2)
 
-    def __init__(self, *, filter_lighthouse_measurements: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        filter_lighthouse_measurements: bool = False,
+        filter_inside_arena: bool = False,
+    ) -> None:
         self.kalman: GateKalman | None = None
         self.estimate_count = 0
         self.filter_lighthouse_measurements = filter_lighthouse_measurements
+        self.filter_inside_arena = filter_inside_arena
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
         # subsequent normal computations from flipping orientation mid-flight.
@@ -136,6 +145,10 @@ class GateTracker:
             return None
 
         candidates = [camera_corners_to_world(c, pose) for c in gate.corners_cam_m]
+        if self.filter_inside_arena:
+            candidates = [cs for cs in candidates if self._inside_arena(cs)]
+            if not candidates:
+                return None
         drone_pos = np.array([pose.x, pose.y, pose.z])
 
         if self.kalman is not None:
@@ -156,6 +169,22 @@ class GateTracker:
             self.kalman.update(best, measurement_noise=measurement_noise)
         self.estimate_count += 1
         return np.mean(best, axis=0)
+
+    def _inside_arena(self, corners: list[np.ndarray]) -> bool:
+        center = np.mean(corners, axis=0)
+        inside = (
+            self.ARENA_XLIM[0] <= center[0] <= self.ARENA_XLIM[1]
+            and self.ARENA_YLIM[0] <= center[1] <= self.ARENA_YLIM[1]
+            and self.ARENA_ZLIM[0] <= center[2] <= self.ARENA_ZLIM[1]
+        )
+        if inside:
+            return True
+        print(
+            f"[GATE_REJECT] world_center=[{center[0]:+.2f}, {center[1]:+.2f}, {center[2]:+.2f}] "
+            "outside arena bounds",
+            flush=True,
+        )
+        return False
 
     def reset(self) -> None:
         self.kalman = None
