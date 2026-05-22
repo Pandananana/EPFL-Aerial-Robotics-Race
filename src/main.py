@@ -131,6 +131,7 @@ def build_system(
         planner.state_changed.connect(recorder.on_state_changed)
         planner.waypoint_ready.connect(recorder.on_waypoint)
         planner.gate_estimated.connect(recorder.on_gate_estimated)
+        planner.measurement_accepted.connect(recorder.on_measurement_accepted)
         controller.setpoint_ready.connect(recorder.on_setpoint)
         manual.setpoint_ready.connect(recorder.on_setpoint)
 

@@ -21,6 +21,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+import numpy as np
+
 from src.messages import DronePose, Gate3D, GateEstimate, Waypoint
 
 if TYPE_CHECKING:
@@ -41,6 +43,7 @@ class Context:
     emit_waypoint: Callable[[Waypoint], None]
     notify_mission_done: Callable[[], None]
     notify_gate_estimated: Callable[["GateEstimate"], None]
+    notify_measurement_accepted: Callable[[int, "np.ndarray"], None]
     # Where to write the gates.csv at the end of the recon lap. None disables
     # the write (e.g. when racing from a preloaded CSV).
     gates_save_path: Path | None = None

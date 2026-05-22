@@ -31,7 +31,9 @@ class MeasureState(State):
         self._start_t: float | None = None
 
     def on_gate(self, ctx: Context, gate: Gate3D) -> None:
-        ctx.tracker.update(gate, ctx.pose)
+        center = ctx.tracker.update(gate, ctx.pose)
+        if center is not None:
+            ctx.notify_measurement_accepted(ctx.gates_done + 1, center)
         # Keep `approach_normal` aligned with the filter's current normal so
         # the next pass-through computation can't pick the wrong side.
         n = ctx.tracker.oriented_normal()

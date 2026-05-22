@@ -96,6 +96,7 @@ class Recorder(QtCore.QObject):
 
         self._pose: Latest[DronePose] = Latest()
         self._gate_estimates: list[GateEstimate] = []
+        self._raw_measurements: list[tuple[int, np.ndarray]] = []
         self._state = "IDLE"
         self._count = 0
         self._log_every_n = max(1, int(pose_log_every_n))
@@ -206,6 +207,17 @@ class Recorder(QtCore.QObject):
             return
         self._write_log(event="setpoint")
 
+    @QtCore.pyqtSlot(int, object)
+    def on_measurement_accepted(self, gate_num: int, center: np.ndarray) -> None:
+        self._raw_measurements.append((gate_num, center))
+        self._write_log(
+            event="measurement_accepted",
+            x=float(center[0]),
+            y=float(center[1]),
+            z=float(center[2]),
+            message=f"gate={gate_num}",
+        )
+
     @QtCore.pyqtSlot(object)
     def on_gate_estimated(self, est: GateEstimate) -> None:
         self._gate_estimates.append(est)
@@ -231,20 +243,21 @@ class Recorder(QtCore.QObject):
         return self._count
 
     def _save_gates_csv(self) -> None:
-        path = os.path.join(self.save_dir, "gates_estimates.csv")
+        path = os.path.join(self.save_dir, "gate_estimates.csv")
         with open(path, "w", newline="") as f:
             w = csv.writer(f)
-            w.writerow(["Gate", "x", "y", "z", "theta", "width", "height"])
+            w.writerow(["# Accepted measurements"])
+            w.writerow(["gate", "x", "y", "z"])
+            for gate_num, center in self._raw_measurements:
+                w.writerow([gate_num, round(float(center[0]), 4),
+                             round(float(center[1]), 4), round(float(center[2]), 4)])
+            w.writerow([])
+            w.writerow(["# Final Kalman estimates"])
+            w.writerow(["gate", "x", "y", "z", "theta", "width", "height"])
             for est in self._gate_estimates:
-                w.writerow([
-                    est.gate_num,
-                    round(est.x, 4),
-                    round(est.y, 4),
-                    round(est.z, 4),
-                    round(est.theta_rad, 4),
-                    round(est.width_m, 4),
-                    round(est.height_m, 4),
-                ])
+                w.writerow([est.gate_num, round(est.x, 4), round(est.y, 4),
+                             round(est.z, 4), round(est.theta_rad, 4),
+                             round(est.width_m, 4), round(est.height_m, 4)])
         print(f"Saved gate estimates to {path}", flush=True)
 
     def _write_log(self, **values: object) -> None:
