@@ -122,19 +122,17 @@ class GateTracker:
     def has_estimate(self) -> bool:
         return self.kalman is not None
 
-    def update(self, gate: Gate3D, pose: DronePose) -> None:
+    def update(self, gate: Gate3D, pose: DronePose) -> np.ndarray | None:
         """Pick the best of `gate.corners_cam_m` and feed it into the filter.
 
-        The detector returns every gate in frame. The "best" candidate is the
-        one closest to the current Kalman estimate (so we stay locked on the
-        same gate across frames) or, if there's no estimate yet, the one
-        closest to the drone (the next one we'd actually fly toward).
+        Returns the accepted world-frame center if the measurement was used,
+        or None if it was rejected (no corners, poor lighthouse fix, etc.).
         """
         if not gate.corners_cam_m:
-            return
+            return None
         measurement_noise = self._measurement_noise_for_pose(pose)
         if measurement_noise is None:
-            return
+            return None
 
         candidates = [camera_corners_to_world(c, pose) for c in gate.corners_cam_m]
         drone_pos = np.array([pose.x, pose.y, pose.z])
@@ -156,6 +154,7 @@ class GateTracker:
         else:
             self.kalman.update(best, measurement_noise=measurement_noise)
         self.estimate_count += 1
+        return np.mean(best, axis=0)
 
     def reset(self) -> None:
         self.kalman = None

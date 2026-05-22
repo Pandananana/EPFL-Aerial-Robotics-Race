@@ -19,7 +19,7 @@ import numpy as np
 
 
 class PolyTrajectory:
-    VEL_LIM_XY = 1.5
+    VEL_LIM_XY = 0.75
     VEL_LIM_Z = 0.5
     ACC_LIM_XY = 2.5
     ACC_LIM_Z = 2.0
