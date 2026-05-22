@@ -377,8 +377,9 @@ def main(argv: list[str] | None = None) -> int:
     # camera frame has arrived — otherwise live mode would take off while
     # the AI-deck is still offline / mis-wired. --no-fly is the opt-out,
     # used when the drone is being held for calibration / recording.
+    # --race-only skips perception entirely, so the camera feed isn't needed.
     if not (args.source == "live" and args.no_fly):
-        ready = {"link": False, "video": False}
+        ready = {"link": False, "video": args.race_only}
 
         def _try_start() -> None:
             if ready["link"] and ready["video"]:
@@ -401,7 +402,8 @@ def main(argv: list[str] | None = None) -> int:
             _try_start()
 
         sys_["link"].connected.connect(_on_link_connected)
-        sys_["video"].frame_ready.connect(_on_first_frame)
+        if not args.race_only:
+            sys_["video"].frame_ready.connect(_on_first_frame)
     sys_["planner"].mission_done.connect(sys_["link"].send_stop)
 
     win = FpvWindow(sys_["manual"])
