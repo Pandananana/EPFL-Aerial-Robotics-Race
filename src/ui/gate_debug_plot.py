@@ -22,6 +22,8 @@ def _true_gate_corners(row: dict[str, str]) -> np.ndarray:
     width = float(row["width"])
     height = float(row["height"])
 
+    # CSV theta is the angle between the gate surface projected onto XY and
+    # the X axis, so it directly gives the gate's horizontal width axis.
     width_axis = np.array([math.cos(theta), math.sin(theta), 0.0])
     z_axis = np.array([0.0, 0.0, 1.0])
     half_w = 0.5 * width * width_axis
