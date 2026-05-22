@@ -237,19 +237,23 @@ class GateDebugPlotter(QtCore.QObject):
         if self._planned_traj is not None:
             gate_sets.append(self._planned_traj)
         if not gate_sets:
-            self._ax.set_xlim(2, -2)
-            self._ax.set_ylim(-2, 2)
-            self._ax.set_zlim(0, 2.5)
-            return
+            xyz_min = np.array([-2.0, -2.0, 0.0])
+            xyz_max = np.array([2.0, 2.0, 2.5])
+        else:
+            pts = np.vstack(gate_sets)
+            xyz_min = pts.min(axis=0)
+            xyz_max = pts.max(axis=0)
 
-        pts = np.vstack(gate_sets)
-        xyz_min = pts.min(axis=0)
-        xyz_max = pts.max(axis=0)
-        span = np.maximum(xyz_max - xyz_min, 1.0)
-        margin = 0.15 * span
-        lo = xyz_min - margin
-        hi = xyz_max + margin
+        center = 0.5 * (xyz_min + xyz_max)
+        half_span = 0.5 * float(np.max(np.maximum(xyz_max - xyz_min, 1.0)))
+        half_span *= 1.15
+        lo = center - half_span
+        hi = center + half_span
+
+        z_lo = max(0.0, lo[2])
+        z_hi = z_lo + 2.0 * half_span
 
         self._ax.set_xlim(hi[1], lo[1])
         self._ax.set_ylim(lo[0], hi[0])
-        self._ax.set_zlim(max(0.0, lo[2]), hi[2])
+        self._ax.set_zlim(z_lo, z_hi)
+        self._ax.set_box_aspect((1.0, 1.0, 1.0))
