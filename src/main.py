@@ -82,6 +82,7 @@ def build_system(
     record: bool = True,
     preloaded_gates=None,
     gates_save_path: Path | None = None,
+    threaded_detector: bool = True,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -290,6 +291,10 @@ def main(argv: list[str] | None = None) -> int:
         video=video, link=link, record=record,
         preloaded_gates=preloaded_gates,
         gates_save_path=gates_save_path,
+        # Replay is already fed from a worker thread. Keeping YOLO in a
+        # second Qt thread can terminate the Windows Torch/Qt process without
+        # a Python traceback, and step mode does not need live-frame latency.
+        threaded_detector=args.source != "replay",
     )
 
     _latest_pose = Latest()
