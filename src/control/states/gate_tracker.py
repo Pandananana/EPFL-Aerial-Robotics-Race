@@ -11,6 +11,7 @@ covariance, identical to the aerial-robotics version.
 from __future__ import annotations
 
 import math
+from collections import deque
 
 import numpy as np
 
@@ -108,17 +109,24 @@ class GateTracker:
     ARENA_XLIM = (-1.7, 1.5)
     ARENA_YLIM = (-1.5, 1.5)
     ARENA_ZLIM = (0.40, 2.2)
+    REPROJ_WARMUP_ACCEPTED = 5
+    REPROJ_WINDOW = 20
+    REPROJ_MULTIPLIER = 2.0
+    REPROJ_ABS_FLOOR_PX = 10.0
 
     def __init__(
         self,
         *,
         filter_lighthouse_measurements: bool = False,
         filter_inside_arena: bool = False,
+        filter_reprojection_error: bool = False,
     ) -> None:
         self.kalman: GateKalman | None = None
         self.estimate_count = 0
         self.filter_lighthouse_measurements = filter_lighthouse_measurements
         self.filter_inside_arena = filter_inside_arena
+        self.filter_reprojection_error = filter_reprojection_error
+        self._accepted_reprojection_errors: deque[float] = deque(maxlen=self.REPROJ_WINDOW)
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
         # subsequent normal computations from flipping orientation mid-flight.
@@ -144,23 +152,34 @@ class GateTracker:
         if measurement_noise is None:
             return None
 
-        candidates = [camera_corners_to_world(c, pose) for c in gate.corners_cam_m]
+        errors = gate.reprojection_errors_px
+        candidates = [
+            (camera_corners_to_world(c, pose), float(errors[i]) if i < len(errors) else None)
+            for i, c in enumerate(gate.corners_cam_m)
+        ]
         if self.filter_inside_arena:
-            candidates = [cs for cs in candidates if self._inside_arena(cs)]
+            candidates = [(cs, err) for cs, err in candidates if self._inside_arena(cs)]
+            if not candidates:
+                return None
+        if self.filter_reprojection_error:
+            candidates = [
+                (cs, err) for cs, err in candidates
+                if self._passes_reprojection_filter(err)
+            ]
             if not candidates:
                 return None
         drone_pos = np.array([pose.x, pose.y, pose.z])
 
         if self.kalman is not None:
             est = self.kalman.center()
-            best = min(
+            best, best_error = min(
                 candidates,
-                key=lambda cs: np.linalg.norm(np.mean(cs, axis=0) - est),
+                key=lambda item: np.linalg.norm(np.mean(item[0], axis=0) - est),
             )
         else:
-            best = min(
+            best, best_error = min(
                 candidates,
-                key=lambda cs: np.linalg.norm(np.mean(cs, axis=0) - drone_pos),
+                key=lambda item: np.linalg.norm(np.mean(item[0], axis=0) - drone_pos),
             )
 
         if self.kalman is None:
@@ -168,6 +187,8 @@ class GateTracker:
         else:
             self.kalman.update(best, measurement_noise=measurement_noise)
         self.estimate_count += 1
+        if best_error is not None and math.isfinite(best_error):
+            self._accepted_reprojection_errors.append(float(best_error))
         return np.mean(best, axis=0)
 
     def _inside_arena(self, corners: list[np.ndarray]) -> bool:
@@ -186,10 +207,28 @@ class GateTracker:
         )
         return False
 
+    def _passes_reprojection_filter(self, error_px: float | None) -> bool:
+        if error_px is None or not math.isfinite(error_px):
+            print("[GATE_REJECT] reprojection error unavailable", flush=True)
+            return False
+        if len(self._accepted_reprojection_errors) < self.REPROJ_WARMUP_ACCEPTED:
+            return True
+        median = float(np.median(np.fromiter(self._accepted_reprojection_errors, dtype=float)))
+        threshold = max(self.REPROJ_ABS_FLOOR_PX, self.REPROJ_MULTIPLIER * median)
+        if error_px <= threshold:
+            return True
+        print(
+            f"[GATE_REJECT] reprojection_error={error_px:.1f}px "
+            f"> threshold={threshold:.1f}px median={median:.1f}px",
+            flush=True,
+        )
+        return False
+
     def reset(self) -> None:
         self.kalman = None
         self.estimate_count = 0
         self.approach_normal = None
+        self._accepted_reprojection_errors.clear()
 
     def reset_filter_only(self) -> None:
         """Drop the filter but keep the approach side fixed (used at MEASURE entry)."""

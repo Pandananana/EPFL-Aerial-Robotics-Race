@@ -84,6 +84,7 @@ def build_system(
     gates_save_path: Path | None = None,
     filter_1: bool = False,
     filter_2: bool = False,
+    filter_3: bool = False,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -108,6 +109,7 @@ def build_system(
         gates_save_path=gates_save_path,
         filter_1=filter_1,
         filter_2=filter_2,
+        filter_3=filter_3,
     )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
@@ -225,6 +227,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Enable filter 2: discard gate measurements whose world-frame "
              "center is outside x=[-2.5, 2], y=[-2, 2], z=[0.40, 2.30].",
     )
+    ap.add_argument(
+        "-3", "--filter-3", action="store_true",
+        help="Enable filter 3: after a short warm-up, discard measurements "
+             "whose reprojection error is much higher than the recent median.",
+    )
     return ap.parse_args(argv)
 
 
@@ -296,6 +303,7 @@ def main(argv: list[str] | None = None) -> int:
         gates_save_path=gates_save_path,
         filter_1=args.filter_1,
         filter_2=args.filter_2,
+        filter_3=args.filter_3,
     )
 
     _latest_pose = Latest()
