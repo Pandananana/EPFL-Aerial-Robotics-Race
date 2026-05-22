@@ -82,6 +82,7 @@ def build_system(
     record: bool = True,
     preloaded_gates=None,
     gates_save_path: Path | None = None,
+    filter_1: bool = False,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -104,6 +105,7 @@ def build_system(
         default_height_m=cfg["control"]["default_height_m"],
         preloaded_gates=preloaded_gates,
         gates_save_path=gates_save_path,
+        filter_1=filter_1,
     )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
@@ -210,6 +212,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Open the 3D gate-debug viewer (true vs. measured gates). Needs a "
              "truth source — either --true-gates or the replay/webots fallback.",
     )
+    ap.add_argument(
+        "-1", "--filter-1", action="store_true",
+        help="Enable filter 1: reject gate measurements when fewer than two "
+             "lighthouse base stations are visible, and trust them more when "
+             "three or more are visible.",
+    )
     return ap.parse_args(argv)
 
 
@@ -279,6 +287,7 @@ def main(argv: list[str] | None = None) -> int:
         video=video, link=link, record=record,
         preloaded_gates=preloaded_gates,
         gates_save_path=gates_save_path,
+        filter_1=args.filter_1,
     )
 
     _latest_pose = Latest()

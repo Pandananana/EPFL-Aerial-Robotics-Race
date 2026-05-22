@@ -106,9 +106,10 @@ class GateTracker:
 
     BASE_MEASUREMENT_NOISE = 0.1
 
-    def __init__(self) -> None:
+    def __init__(self, *, filter_lighthouse_measurements: bool = False) -> None:
         self.kalman: GateKalman | None = None
         self.estimate_count = 0
+        self.filter_lighthouse_measurements = filter_lighthouse_measurements
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
         # subsequent normal computations from flipping orientation mid-flight.
@@ -189,6 +190,8 @@ class GateTracker:
         return rec
 
     def _measurement_noise_for_pose(self, pose: DronePose) -> float | None:
+        if not self.filter_lighthouse_measurements:
+            return self.BASE_MEASUREMENT_NOISE
         count = pose.lighthouse_bs_visible
         if count is None:
             return self.BASE_MEASUREMENT_NOISE

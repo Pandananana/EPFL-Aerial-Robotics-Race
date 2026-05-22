@@ -55,6 +55,7 @@ class Planner(QtCore.QObject):
         n_gates: int = DEFAULT_GATE_COUNT,
         preloaded_gates: list[RecordedGate] | None = None,
         gates_save_path: Path | None = None,
+        filter_1: bool = False,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
@@ -65,7 +66,7 @@ class Planner(QtCore.QObject):
         self._gates_save_path = Path(gates_save_path) if gates_save_path is not None else None
 
         self._state: State | None = None
-        self._tracker = GateTracker()
+        self._tracker = GateTracker(filter_lighthouse_measurements=filter_1)
         self._gates_done = 0
         self._start_x: float | None = None
         self._start_y: float | None = None
