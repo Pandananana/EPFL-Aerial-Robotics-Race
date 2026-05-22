@@ -87,6 +87,7 @@ def build_system(
     filter_3: bool = False,
     filter_4: bool = False,
     filter_5: bool = False,
+    filter_6: bool = False,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -114,6 +115,7 @@ def build_system(
         filter_3=filter_3,
         filter_4=filter_4,
         filter_5=filter_5,
+        filter_6=filter_6,
     )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
@@ -246,6 +248,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Enable filter 5: keep measurements near the image edge, but "
              "multiply their Kalman measurement noise by 3.",
     )
+    ap.add_argument(
+        "-6", "--filter-6", action="store_true",
+        help="Enable filter 6: require multiple accepted measurements before "
+             "leaving search/measure states.",
+    )
     return ap.parse_args(argv)
 
 
@@ -320,6 +327,7 @@ def main(argv: list[str] | None = None) -> int:
         filter_3=args.filter_3,
         filter_4=args.filter_4,
         filter_5=args.filter_5,
+        filter_6=args.filter_6,
     )
 
     _latest_pose = Latest()

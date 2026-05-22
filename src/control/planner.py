@@ -60,6 +60,7 @@ class Planner(QtCore.QObject):
         filter_3: bool = False,
         filter_4: bool = False,
         filter_5: bool = False,
+        filter_6: bool = False,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
@@ -68,6 +69,7 @@ class Planner(QtCore.QObject):
         self._n_gates = n_gates
         self._preloaded_gates = list(preloaded_gates) if preloaded_gates else None
         self._gates_save_path = Path(gates_save_path) if gates_save_path is not None else None
+        self._require_measurement_count = filter_6
 
         self._state: State | None = None
         self._tracker = GateTracker(
@@ -150,6 +152,7 @@ class Planner(QtCore.QObject):
             gates_done=self._gates_done,
             n_gates=self._n_gates,
             takeoff_height_m=self._takeoff_height_m,
+            require_measurement_count=self._require_measurement_count,
             emit_waypoint=self.waypoint_ready.emit,
             notify_mission_done=self.mission_done.emit,
             notify_gate_estimated=self.gate_estimated.emit,

@@ -39,9 +39,13 @@ class SearchState(State):
         ctx.tracker.update(gate, ctx.pose)
 
     def tick(self, ctx: Context) -> State | None:
+        min_estimates = (
+            self.MIN_ESTIMATES_BEFORE_APPROACH
+            if ctx.require_measurement_count else 1
+        )
         if (
             ctx.tracker.has_estimate
-            and ctx.tracker.estimate_count >= self.MIN_ESTIMATES_BEFORE_APPROACH
+            and ctx.tracker.estimate_count >= min_estimates
         ):
             transition = self._build_approach(ctx)
             if transition is not None:

@@ -40,6 +40,7 @@ class Context:
     gates_done: int
     n_gates: int
     takeoff_height_m: float
+    require_measurement_count: bool
     emit_waypoint: Callable[[Waypoint], None]
     notify_mission_done: Callable[[], None]
     notify_gate_estimated: Callable[["GateEstimate"], None]

@@ -45,11 +45,15 @@ class MeasureState(State):
             self._start_t = ctx.pose.timestamp
 
         ctx.emit(self._pos[0], self._pos[1], self._pos[2], self._yaw, self.MEASURE_SPEED_MPS)
+        min_estimates = (
+            self.MIN_ESTIMATES_BEFORE_PASS
+            if ctx.require_measurement_count else 1
+        )
 
         if (
             ctx.pose.timestamp - self._start_t < self.HOLD_S
             or not ctx.tracker.has_estimate
-            or ctx.tracker.estimate_count < self.MIN_ESTIMATES_BEFORE_PASS
+            or ctx.tracker.estimate_count < min_estimates
         ):
             return None
 
