@@ -115,6 +115,7 @@ class GateTracker:
     REPROJ_ABS_FLOOR_PX = 10.0
     SHAPE_HEIGHT_RANGE_M = (0.30, 0.50)
     SHAPE_WIDTH_RANGE_M = (0.20, 0.60)
+    EDGE_MEASUREMENT_NOISE_MULTIPLIER = 3.0
 
     def __init__(
         self,
@@ -123,6 +124,7 @@ class GateTracker:
         filter_inside_arena: bool = False,
         filter_reprojection_error: bool = False,
         filter_shape: bool = False,
+        filter_edge_noise: bool = False,
     ) -> None:
         self.kalman: GateKalman | None = None
         self.estimate_count = 0
@@ -130,6 +132,7 @@ class GateTracker:
         self.filter_inside_arena = filter_inside_arena
         self.filter_reprojection_error = filter_reprojection_error
         self.filter_shape = filter_shape
+        self.filter_edge_noise = filter_edge_noise
         self._accepted_reprojection_errors: deque[float] = deque(maxlen=self.REPROJ_WINDOW)
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
@@ -158,28 +161,34 @@ class GateTracker:
 
         errors = gate.reprojection_errors_px
         widths = gate.widths_m
+        near_edges = gate.near_image_edge
         candidates = [
             (
                 camera_corners_to_world(c, pose),
                 float(errors[i]) if i < len(errors) else None,
                 float(widths[i]) if i < len(widths) else None,
+                bool(near_edges[i]) if i < len(near_edges) else False,
             )
             for i, c in enumerate(gate.corners_cam_m)
         ]
         if self.filter_inside_arena:
-            candidates = [(cs, err, width) for cs, err, width in candidates if self._inside_arena(cs)]
+            candidates = [
+                (cs, err, width, near_edge)
+                for cs, err, width, near_edge in candidates
+                if self._inside_arena(cs)
+            ]
             if not candidates:
                 return None
         if self.filter_reprojection_error:
             candidates = [
-                (cs, err, width) for cs, err, width in candidates
+                (cs, err, width, near_edge) for cs, err, width, near_edge in candidates
                 if self._passes_reprojection_filter(err)
             ]
             if not candidates:
                 return None
         if self.filter_shape:
             candidates = [
-                (cs, err, width) for cs, err, width in candidates
+                (cs, err, width, near_edge) for cs, err, width, near_edge in candidates
                 if self._passes_shape_filter(cs, width)
             ]
             if not candidates:
@@ -188,14 +197,21 @@ class GateTracker:
 
         if self.kalman is not None:
             est = self.kalman.center()
-            best, best_error, _best_width = min(
+            best, best_error, _best_width, best_near_edge = min(
                 candidates,
                 key=lambda item: np.linalg.norm(np.mean(item[0], axis=0) - est),
             )
         else:
-            best, best_error, _best_width = min(
+            best, best_error, _best_width, best_near_edge = min(
                 candidates,
                 key=lambda item: np.linalg.norm(np.mean(item[0], axis=0) - drone_pos),
+            )
+
+        if self.filter_edge_noise and best_near_edge:
+            measurement_noise *= self.EDGE_MEASUREMENT_NOISE_MULTIPLIER
+            print(
+                f"[GATE_NOISE] near image edge; measurement_noise={measurement_noise:.3f}",
+                flush=True,
             )
 
         if self.kalman is None:

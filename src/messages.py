@@ -48,6 +48,7 @@ class GateDetection2D:
     timestamp: float
     frame_seq: int
     corners_px: list[np.ndarray] = field(default_factory=list)
+    image_shape_hw: tuple[int, int] | None = None
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,7 @@ class Gate3D:
     corners_cam_m: list[np.ndarray] = field(default_factory=list)
     widths_m: list[float] = field(default_factory=list)
     reprojection_errors_px: list[float] = field(default_factory=list)
+    near_image_edge: list[bool] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

@@ -24,6 +24,7 @@ from src.messages import Gate3D, GateDetection2D
 
 class PoseEstimator(QtCore.QObject):
     gate_ready = QtCore.pyqtSignal(object)  # Gate3D
+    EDGE_MARGIN_PX = 6.0
 
     def __init__(
         self,
@@ -46,6 +47,7 @@ class PoseEstimator(QtCore.QObject):
         corners_cam: list[np.ndarray] = []
         widths: list[float] = []
         errors: list[float] = []
+        near_edges: list[bool] = []
         for q in det.corners_px:
             if q.shape != (4, 2):
                 continue
@@ -56,6 +58,7 @@ class PoseEstimator(QtCore.QObject):
             corners_cam.append(c)
             widths.append(w)
             errors.append(e)
+            near_edges.append(self._near_image_edge(q, det.image_shape_hw))
 
         self.gate_ready.emit(Gate3D(
             timestamp=det.timestamp,
@@ -63,7 +66,24 @@ class PoseEstimator(QtCore.QObject):
             corners_cam_m=corners_cam,
             widths_m=widths,
             reprojection_errors_px=errors,
+            near_image_edge=near_edges,
         ))
+
+    def _near_image_edge(
+        self,
+        corners_px: np.ndarray,
+        image_shape_hw: tuple[int, int] | None,
+    ) -> bool:
+        if image_shape_hw is None:
+            return False
+        h, w = image_shape_hw
+        pts = np.asarray(corners_px, dtype=np.float64)
+        return bool(
+            np.any(pts[:, 0] <= self.EDGE_MARGIN_PX)
+            or np.any(pts[:, 0] >= (w - 1 - self.EDGE_MARGIN_PX))
+            or np.any(pts[:, 1] <= self.EDGE_MARGIN_PX)
+            or np.any(pts[:, 1] >= (h - 1 - self.EDGE_MARGIN_PX))
+        )
 
     def _gate_model(self, width: float) -> np.ndarray:
         h = self._h / 2.0

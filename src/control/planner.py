@@ -59,6 +59,7 @@ class Planner(QtCore.QObject):
         filter_2: bool = False,
         filter_3: bool = False,
         filter_4: bool = False,
+        filter_5: bool = False,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
@@ -74,6 +75,7 @@ class Planner(QtCore.QObject):
             filter_inside_arena=filter_2,
             filter_reprojection_error=filter_3,
             filter_shape=filter_4,
+            filter_edge_noise=filter_5,
         )
         self._gates_done = 0
         self._start_x: float | None = None

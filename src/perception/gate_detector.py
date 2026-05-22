@@ -34,6 +34,7 @@ class GateDetector(QtCore.QObject):
             timestamp=frame.timestamp,
             frame_seq=frame.seq,
             corners_px=[np.asarray(q, dtype=np.float32) for q in quads],
+            image_shape_hw=frame.image.shape[:2],
         ))
 
 
