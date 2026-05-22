@@ -113,6 +113,8 @@ class GateTracker:
     REPROJ_WINDOW = 20
     REPROJ_MULTIPLIER = 2.0
     REPROJ_ABS_FLOOR_PX = 10.0
+    SHAPE_HEIGHT_RANGE_M = (0.30, 0.50)
+    SHAPE_WIDTH_RANGE_M = (0.20, 0.60)
 
     def __init__(
         self,
@@ -120,12 +122,14 @@ class GateTracker:
         filter_lighthouse_measurements: bool = False,
         filter_inside_arena: bool = False,
         filter_reprojection_error: bool = False,
+        filter_shape: bool = False,
     ) -> None:
         self.kalman: GateKalman | None = None
         self.estimate_count = 0
         self.filter_lighthouse_measurements = filter_lighthouse_measurements
         self.filter_inside_arena = filter_inside_arena
         self.filter_reprojection_error = filter_reprojection_error
+        self.filter_shape = filter_shape
         self._accepted_reprojection_errors: deque[float] = deque(maxlen=self.REPROJ_WINDOW)
         # Unit world-frame normal pointing toward the side from which the drone
         # is approaching. Set when the drone first picks a side; used to keep
@@ -153,18 +157,30 @@ class GateTracker:
             return None
 
         errors = gate.reprojection_errors_px
+        widths = gate.widths_m
         candidates = [
-            (camera_corners_to_world(c, pose), float(errors[i]) if i < len(errors) else None)
+            (
+                camera_corners_to_world(c, pose),
+                float(errors[i]) if i < len(errors) else None,
+                float(widths[i]) if i < len(widths) else None,
+            )
             for i, c in enumerate(gate.corners_cam_m)
         ]
         if self.filter_inside_arena:
-            candidates = [(cs, err) for cs, err in candidates if self._inside_arena(cs)]
+            candidates = [(cs, err, width) for cs, err, width in candidates if self._inside_arena(cs)]
             if not candidates:
                 return None
         if self.filter_reprojection_error:
             candidates = [
-                (cs, err) for cs, err in candidates
+                (cs, err, width) for cs, err, width in candidates
                 if self._passes_reprojection_filter(err)
+            ]
+            if not candidates:
+                return None
+        if self.filter_shape:
+            candidates = [
+                (cs, err, width) for cs, err, width in candidates
+                if self._passes_shape_filter(cs, width)
             ]
             if not candidates:
                 return None
@@ -172,12 +188,12 @@ class GateTracker:
 
         if self.kalman is not None:
             est = self.kalman.center()
-            best, best_error = min(
+            best, best_error, _best_width = min(
                 candidates,
                 key=lambda item: np.linalg.norm(np.mean(item[0], axis=0) - est),
             )
         else:
-            best, best_error = min(
+            best, best_error, _best_width = min(
                 candidates,
                 key=lambda item: np.linalg.norm(np.mean(item[0], axis=0) - drone_pos),
             )
@@ -220,6 +236,27 @@ class GateTracker:
         print(
             f"[GATE_REJECT] reprojection_error={error_px:.1f}px "
             f"> threshold={threshold:.1f}px median={median:.1f}px",
+            flush=True,
+        )
+        return False
+
+    def _passes_shape_filter(self, corners: list[np.ndarray], width_m: float | None) -> bool:
+        tl, tr, br, bl = corners
+        estimated_width = width_m
+        if estimated_width is None or not math.isfinite(estimated_width):
+            estimated_width = 0.5 * (
+                float(np.linalg.norm(tr - tl)) + float(np.linalg.norm(br - bl))
+            )
+        estimated_height = 0.5 * (
+            float(np.linalg.norm(bl - tl)) + float(np.linalg.norm(br - tr))
+        )
+        width_ok = self.SHAPE_WIDTH_RANGE_M[0] <= estimated_width <= self.SHAPE_WIDTH_RANGE_M[1]
+        height_ok = self.SHAPE_HEIGHT_RANGE_M[0] <= estimated_height <= self.SHAPE_HEIGHT_RANGE_M[1]
+        if width_ok and height_ok:
+            return True
+        print(
+            f"[GATE_REJECT] shape width={estimated_width:.2f}m height={estimated_height:.2f}m "
+            f"outside width={self.SHAPE_WIDTH_RANGE_M} height={self.SHAPE_HEIGHT_RANGE_M}",
             flush=True,
         )
         return False

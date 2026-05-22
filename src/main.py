@@ -85,6 +85,7 @@ def build_system(
     filter_1: bool = False,
     filter_2: bool = False,
     filter_3: bool = False,
+    filter_4: bool = False,
 ) -> dict:
     """Instantiate and wire every module. Returns the bag of objects so
     the caller can start them and keep them alive."""
@@ -110,6 +111,7 @@ def build_system(
         filter_1=filter_1,
         filter_2=filter_2,
         filter_3=filter_3,
+        filter_4=filter_4,
     )
     controller = Controller(default_height_m=cfg["control"]["default_height_m"])
     manual = ManualControl(
@@ -232,6 +234,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Enable filter 3: after a short warm-up, discard measurements "
              "whose reprojection error is much higher than the recent median.",
     )
+    ap.add_argument(
+        "-4", "--filter-4", action="store_true",
+        help="Enable filter 4: discard measurements with rectangle height "
+             "outside [0.40, 0.60] m or width outside [0.25, 0.60] m.",
+    )
     return ap.parse_args(argv)
 
 
@@ -304,6 +311,7 @@ def main(argv: list[str] | None = None) -> int:
         filter_1=args.filter_1,
         filter_2=args.filter_2,
         filter_3=args.filter_3,
+        filter_4=args.filter_4,
     )
 
     _latest_pose = Latest()
@@ -314,9 +322,11 @@ def main(argv: list[str] | None = None) -> int:
     else:
         debug_truth_csv = args.true_gates
         if debug_truth_csv is None and args.source == "replay" and args.recording is not None:
-            candidate = args.recording / "gates.csv"
-            if candidate.exists():
-                debug_truth_csv = candidate
+            for name in ("gates.csv", "gate_positions.csv"):
+                candidate = args.recording / name
+                if candidate.exists():
+                    debug_truth_csv = candidate
+                    break
 
     gate_debug_plotter = None
     if args.debug and debug_truth_csv is not None:
@@ -333,7 +343,8 @@ def main(argv: list[str] | None = None) -> int:
         if args.source == "replay" and args.recording is not None:
             print(
                 f"[GATE_DEBUG] disabled: no truth gates found. Pass "
-                f"--true-gates <csv>, or add {args.recording / 'gates.csv'}.",
+                f"--true-gates <csv>, or add {args.recording / 'gates.csv'} "
+                f"or {args.recording / 'gate_positions.csv'}.",
                 flush=True,
             )
         else:

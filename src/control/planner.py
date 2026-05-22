@@ -58,6 +58,7 @@ class Planner(QtCore.QObject):
         filter_1: bool = False,
         filter_2: bool = False,
         filter_3: bool = False,
+        filter_4: bool = False,
         parent: QtCore.QObject | None = None,
     ):
         super().__init__(parent)
@@ -72,6 +73,7 @@ class Planner(QtCore.QObject):
             filter_lighthouse_measurements=filter_1,
             filter_inside_arena=filter_2,
             filter_reprojection_error=filter_3,
+            filter_shape=filter_4,
         )
         self._gates_done = 0
         self._start_x: float | None = None
