@@ -29,7 +29,7 @@ class SearchState(State):
     YAW_ADVANCE_TOL_RAD = math.radians(5.0)
     SEARCH_SPEED_MPS = 0.2
     APPROACH_DISTANCE_M = 0.7
-    MIN_ESTIMATES_BEFORE_APPROACH = 3
+    MIN_ESTIMATES_BEFORE_APPROACH = 1
 
     def __init__(self) -> None:
         self._yaw_target_rad: float | None = None

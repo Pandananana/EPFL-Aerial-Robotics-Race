@@ -32,14 +32,30 @@ class PassThroughState(State):
     HOLD_S = 1.0
     HOLD_SPEED_MPS = 0.1
 
-    def __init__(self, target_pos: np.ndarray, target_yaw_rad: float) -> None:
+    def __init__(
+        self,
+        target_pos: np.ndarray,
+        target_yaw_rad: float,
+        pre_gate_pos: np.ndarray | None = None,
+    ) -> None:
         self._pos = target_pos.copy()
         self._yaw = target_yaw_rad
+        self._pre_gate_pos = pre_gate_pos.copy() if pre_gate_pos is not None else None
+        self._pre_gate_reached = pre_gate_pos is None
         self._reached = False
         self._turn_yaw_rad: float | None = None
         self._hold_start_t: float | None = None
 
     def tick(self, ctx: Context) -> State | None:
+        if not self._pre_gate_reached:
+            assert self._pre_gate_pos is not None
+            ctx.emit(self._pre_gate_pos[0], self._pre_gate_pos[1], self._pre_gate_pos[2], self._yaw, self.PASS_SPEED_MPS)
+            drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])
+            if np.linalg.norm(self._pre_gate_pos - drone_pos) > self.REACHED_M:
+                return None
+            logger.info("Pre-gate point reached; flying through")
+            self._pre_gate_reached = True
+
         if not self._reached:
             ctx.emit(self._pos[0], self._pos[1], self._pos[2], self._yaw, self.PASS_SPEED_MPS)
             drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])

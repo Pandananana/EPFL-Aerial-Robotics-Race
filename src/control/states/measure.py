@@ -65,7 +65,9 @@ class MeasureState(State):
         if d_norm < 1e-6:
             return None
         direction = direction / d_norm
+        PRE_GATE_M = 0.20
         pass_target = center + direction * self.PASS_OVERSHOOT_M
+        pre_gate = center - direction * PRE_GATE_M
         pass_yaw = math.atan2(direction[1], direction[0])
 
         rec = ctx.tracker.record_current_gate()
@@ -77,10 +79,13 @@ class MeasureState(State):
                 rec.width_m, rec.height_m,
             )
 
-        logger.info("Pass-through target %s yaw=%.1f deg", np.round(pass_target, 2), math.degrees(pass_yaw))
+        logger.info(
+            "Pass-through pre-gate %s -> target %s yaw=%.1f deg",
+            np.round(pre_gate, 2), np.round(pass_target, 2), math.degrees(pass_yaw),
+        )
         self._emit_estimate(ctx)
         from src.control.states.pass_through import PassThroughState
-        return PassThroughState(pass_target, pass_yaw)
+        return PassThroughState(pass_target, pass_yaw, pre_gate_pos=pre_gate)
 
     def _emit_estimate(self, ctx: Context) -> None:
         if ctx.tracker.kalman is None:
