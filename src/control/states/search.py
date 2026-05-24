@@ -25,10 +25,10 @@ def _angle_diff(a: float, b: float) -> float:
 
 
 class SearchState(State):
-    YAW_STEP_RAD = 0.3                          # ~17 deg between target increments
+    YAW_STEP_RAD = 0.1                          # ~17 deg between target increments
     YAW_ADVANCE_TOL_RAD = math.radians(5.0)
     SEARCH_SPEED_MPS = 0.2
-    APPROACH_DISTANCE_M = 0.7
+    APPROACH_DISTANCE_M = 0.5
     MIN_ESTIMATES_BEFORE_APPROACH = 1
 
     def __init__(self) -> None:
@@ -78,14 +78,20 @@ class SearchState(State):
 
         center = ctx.tracker.kalman.center()
         drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])
-        side_a = center + normal * self.APPROACH_DISTANCE_M
-        side_b = center - normal * self.APPROACH_DISTANCE_M
+        flat = normal.copy(); flat[2] = 0.0
+        flat_mag = float(np.linalg.norm(flat))
+        if flat_mag > 1e-6:
+            flat /= flat_mag
+        else:
+            flat = normal
+        side_a = center + flat * self.APPROACH_DISTANCE_M; side_a[2] = center[2]
+        side_b = center - flat * self.APPROACH_DISTANCE_M; side_b[2] = center[2]
         if np.linalg.norm(side_a - drone_pos) < np.linalg.norm(side_b - drone_pos):
             approach_pos = side_a
-            ctx.tracker.approach_normal = normal.copy()
+            ctx.tracker.approach_normal = flat.copy()
         else:
             approach_pos = side_b
-            ctx.tracker.approach_normal = -normal.copy()
+            ctx.tracker.approach_normal = -flat.copy()
 
         direction = center - drone_pos
         target_yaw = math.atan2(direction[1], direction[0])

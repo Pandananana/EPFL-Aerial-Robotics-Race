@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class MeasureState(State):
     HOLD_S = 2.0
-    PASS_OVERSHOOT_M = 0.4
+    PASS_OVERSHOOT_M = 0.2
     MEASURE_SPEED_MPS = 0.3
     MIN_ESTIMATES_BEFORE_PASS = 5
 
@@ -61,13 +61,14 @@ class MeasureState(State):
         center = ctx.tracker.kalman.center()
         drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])
         direction = center - drone_pos
+        direction[2] = 0.0  # keep pass-through waypoints at gate height
         d_norm = float(np.linalg.norm(direction))
         if d_norm < 1e-6:
             return None
         direction = direction / d_norm
         PRE_GATE_M = 0.20
-        pass_target = center + direction * self.PASS_OVERSHOOT_M
-        pre_gate = center - direction * PRE_GATE_M
+        pass_target = center + direction * self.PASS_OVERSHOOT_M; pass_target[2] = center[2]
+        pre_gate = center - direction * PRE_GATE_M; pre_gate[2] = center[2]
         pass_yaw = math.atan2(direction[1], direction[0])
 
         rec = ctx.tracker.record_current_gate()

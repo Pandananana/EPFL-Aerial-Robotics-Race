@@ -65,10 +65,16 @@ class ApproachState(State):
         assert ctx.tracker.kalman is not None
         center = ctx.tracker.kalman.center()
         drone_pos = np.array([ctx.pose.x, ctx.pose.y, ctx.pose.z])
-        side_a = center + normal * self.APPROACH_DISTANCE_M
-        side_b = center - normal * self.APPROACH_DISTANCE_M
-        chosen = normal if np.linalg.norm(side_a - drone_pos) <= np.linalg.norm(side_b - drone_pos) else -normal
+        flat = normal.copy(); flat[2] = 0.0
+        flat_mag = float(np.linalg.norm(flat))
+        if flat_mag > 1e-6:
+            flat /= flat_mag
+        else:
+            flat = normal
+        side_a = center + flat * self.APPROACH_DISTANCE_M; side_a[2] = center[2]
+        side_b = center - flat * self.APPROACH_DISTANCE_M; side_b[2] = center[2]
+        chosen = flat if np.linalg.norm(side_a - drone_pos) <= np.linalg.norm(side_b - drone_pos) else -flat
         ctx.tracker.approach_normal = chosen
-        self._target_pos = center + chosen * self.APPROACH_DISTANCE_M
+        self._target_pos = center + chosen * self.APPROACH_DISTANCE_M; self._target_pos[2] = center[2]
         direction = center - drone_pos
         self._target_yaw_rad = math.atan2(direction[1], direction[0])
