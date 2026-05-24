@@ -349,9 +349,14 @@ def main(argv: list[str] | None = None) -> int:
         gate_debug_plotter = GateDebugPlotter(truth_csv=debug_truth_csv)
         sys_["link"].pose_ready.connect(gate_debug_plotter.on_pose)
         sys_["estimator"].gate_ready.connect(gate_debug_plotter.on_gate)
-        sys_["planner"].gate_estimate_ready.connect(gate_debug_plotter.on_gate_estimate)
         sys_["planner"].race_trajectory_ready.connect(gate_debug_plotter.on_race_trajectory)
-        sys_["planner"].state_changed.connect(gate_debug_plotter.on_state_changed)
+        if args.source == "replay":
+            # Use logged state changes and gate estimates from run_log.csv.
+            replay.state_changed.connect(gate_debug_plotter.on_state_changed)
+            replay.gate_estimated.connect(gate_debug_plotter.on_gate_estimated)
+        else:
+            sys_["planner"].gate_estimate_ready.connect(gate_debug_plotter.on_gate_estimate)
+            sys_["planner"].state_changed.connect(gate_debug_plotter.on_state_changed)
         print(f"[GATE_DEBUG] plotting true gates from {debug_truth_csv}", flush=True)
         if args.source == "webots":
             print("[GATE_DEBUG] using Webots world frame: x forward, y left, z up", flush=True)
@@ -418,9 +423,20 @@ def main(argv: list[str] | None = None) -> int:
 
         sys_["estimator"].gate_ready.connect(update_debug_tracker)
 
-    sys_["planner"].state_changed.connect(
-        lambda name: print(f"[FSM] -> {name}", flush=True)
-    )
+    if args.source == "replay":
+        replay.state_changed.connect(lambda name: print(f"[FSM] -> {name}", flush=True))
+        replay.gate_estimated.connect(
+            lambda est: print(
+                f"[GATE_EST] gate={est.gate_num} "
+                f"x={est.x:.3f} y={est.y:.3f} z={est.z:.3f} "
+                f"theta={est.theta_rad:.4f} w={est.width_m:.3f} h={est.height_m:.3f}",
+                flush=True,
+            )
+        )
+    else:
+        sys_["planner"].state_changed.connect(
+            lambda name: print(f"[FSM] -> {name}", flush=True)
+        )
     sys_["planner"].mission_done.connect(
         lambda: print("[FSM] mission done", flush=True)
     )
@@ -462,6 +478,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.source == "replay" and args.replay_step:
         win.key_pressed.connect(sys_["link"].advance)
         print("[REPLAY] step mode: focus the FPV window and press any key to advance.", flush=True)
+    if args.source == "replay":
+        replay.state_changed.connect(win.set_status)
     sys_["video"].frame_ready.connect(win.on_frame)
     sys_["detector"].detection_ready.connect(win.on_detection)
     sys_["link"].connected.connect(lambda s: win.set_status(f"Connected to {s}"))

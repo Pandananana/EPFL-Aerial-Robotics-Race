@@ -150,6 +150,24 @@ class GateDebugPlotter(QtCore.QObject):
         self._kalman_estimate = estimate
         self._draw()
 
+    @QtCore.pyqtSlot(object)
+    def on_gate_estimated(self, est: object) -> None:
+        """Reconstruct corners from a GateEstimate and forward to on_gate_estimate."""
+        if self._closed:
+            return
+        center = np.array([est.x, est.y, est.z], dtype=np.float64)
+        # theta_rad is the gate normal; width axis is 90° CCW from the normal.
+        width_axis = np.array([-math.sin(est.theta_rad), math.cos(est.theta_rad), 0.0])
+        half_w = 0.5 * est.width_m * width_axis
+        half_h = np.array([0.0, 0.0, 0.5 * est.height_m])
+        corners = np.array([
+            center - half_w + half_h,
+            center + half_w + half_h,
+            center + half_w - half_h,
+            center - half_w - half_h,
+        ], dtype=np.float64)
+        self.on_gate_estimate(corners)
+
     def _draw(self) -> None:
         elev, azim = self._ax.elev, self._ax.azim
         xlim = self._ax.get_xlim() if self._bounds_set else None

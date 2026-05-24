@@ -1,8 +1,8 @@
-"""Fly back to the takeoff XY at recon altitude, facing the original yaw.
+"""Fly back to the takeoff XY at current altitude, then descend.
 
-Stays at the recon height so the controller is just tracking a horizontal
-waypoint and a yaw target — no descent yet. When both are within
-tolerance, hand off to the landing ramp.
+Stays at whatever height the drone is at when this state is entered so
+there is no altitude jump after the final gate. Once both XY position and
+yaw are within tolerance, hand off to the landing ramp.
 """
 
 from __future__ import annotations
@@ -24,10 +24,14 @@ class ReturnHomeState(State):
         """`then_after_land` is forwarded to LandState. None means the landing
         is terminal (mission_done fires)."""
         self._then_after_land = then_after_land
+        self._cruise_z: float | None = None
 
     def tick(self, ctx: Context) -> State | None:
+        if self._cruise_z is None:
+            self._cruise_z = ctx.pose.z
+
         ctx.emit(
-            ctx.start_x, ctx.start_y, ctx.takeoff_height_m,
+            ctx.start_x, ctx.start_y, self._cruise_z,
             ctx.start_yaw_rad, self.RETURN_SPEED_MPS,
         )
         dx = ctx.pose.x - ctx.start_x
@@ -35,7 +39,7 @@ class ReturnHomeState(State):
         dist = math.hypot(dx, dy)
         yaw_err = abs(((ctx.start_yaw_rad - math.radians(ctx.pose.yaw) + math.pi) % (2 * math.pi)) - math.pi)
         if dist < self.REACHED_M and yaw_err < self.YAW_REACHED_RAD:
-            logger.info("Returned to start; landing")
+            logger.info("Returned to start at z=%.2f; landing", self._cruise_z)
             from src.control.states.land import LandState
             return LandState(then=self._then_after_land)
         return None

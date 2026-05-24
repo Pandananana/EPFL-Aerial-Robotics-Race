@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class MeasureState(State):
     HOLD_S = 2.0
-    PASS_OVERSHOOT_M = 0.2
+    PASS_OVERSHOOT_M = 0.3
     MEASURE_SPEED_MPS = 0.3
     MIN_ESTIMATES_BEFORE_PASS = 5
 
